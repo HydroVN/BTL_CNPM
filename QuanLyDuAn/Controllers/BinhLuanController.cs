@@ -37,6 +37,7 @@ namespace QuanLyDuAn.Controllers
                 mucDoUuTien = cv.MucDoUuTien,
                 trangThai = cv.TrangThai,
                 assignee = assignee,
+                assigneeId = cv.MaThanhVien,
                 comments = cv.Binhluans.OrderBy(b => b.ThoiGian).Select(b => new
                 {
                     avatar = b.MaTaiKhoanNavigation.HoTen[0].ToString().ToUpper(),

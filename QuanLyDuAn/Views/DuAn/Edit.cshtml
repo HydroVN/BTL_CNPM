@@ -45,11 +45,26 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Trạng thái</label>
-                        <select name="trangThai" class="form-select">
-                            <option value="ChuaThucHien" selected="@(Model.TrangThai == "ChuaThucHien")">🔵 Chưa thực hiện</option>
-                            <option value="DangThucHien" selected="@(Model.TrangThai == "DangThucHien")">🟡 Đang thực hiện</option>
-                            <option value="DaHoanThanh" selected="@(Model.TrangThai == "DaHoanThanh")">🔴 Đã hoàn thành</option>
-                        </select>
+                        @if (Model.Congviecs.Count > 0)
+                        {
+                            var total = Model.Congviecs.Count;
+                            var done = Model.Congviecs.Count(c => c.TrangThai == "Done");
+                            var isDone = total == done;
+                            <select name="trangThai" class="form-select bg-light" disabled>
+                                <option value="DangThucHien" selected="@(!isDone)">🟡 Đang thực hiện (Tự động theo tiến độ)</option>
+                                <option value="DaHoanThanh" selected="@(isDone)">🔴 Đã hoàn thành (Tự động theo tiến độ)</option>
+                            </select>
+                            <input type="hidden" name="trangThai" value="@(isDone ? "DaHoanThanh" : "DangThucHien")" />
+                            <small class="text-muted d-block mt-1"><i class="fas fa-info-circle me-1"></i>Trạng thái dự án tự động khóa theo tiến độ công việc.</small>
+                        }
+                        else
+                        {
+                            <select name="trangThai" class="form-select">
+                                <option value="ChuaThucHien" selected="@(Model.TrangThai == "ChuaThucHien")">🔵 Chưa thực hiện</option>
+                                <option value="DangThucHien" selected="@(Model.TrangThai == "DangThucHien")">🟡 Đang thực hiện</option>
+                                <option value="DaHoanThanh" selected="@(Model.TrangThai == "DaHoanThanh")">🔴 Đã hoàn thành</option>
+                            </select>
+                        }
                     </div>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary-custom">

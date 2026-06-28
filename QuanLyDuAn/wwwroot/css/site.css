@@ -699,7 +699,8 @@ body {
 }
 
 .progress-custom .progress-bar {
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    background: var(--success) !important;
+    height: 100% !important;
     border-radius: 50px;
     transition: width .6s ease;
 }

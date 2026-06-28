@@ -5,6 +5,12 @@
     var inProgress = Model.Congviecs.Where(c => c.TrangThai == "InProgress").ToList();
     var review = Model.Congviecs.Where(c => c.TrangThai == "Review").ToList();
     var done = Model.Congviecs.Where(c => c.TrangThai == "Done").ToList();
+
+    var currentUserId = Context.Session.GetString("MaTaiKhoan");
+    var currentUserRole = Context.Session.GetString("VaiTro");
+    var isWorkspaceOwner = Model.MaWorkspaceNavigation?.MaTaiKhoan == currentUserId;
+    var isPm = Model.Thanhviens.Any(tv => tv.MaTaiKhoan == currentUserId && tv.VaiTroDuAn == "PM");
+    var isAuthorizedToManage = isWorkspaceOwner || isPm || currentUserRole == "Admin";
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
@@ -112,6 +118,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script>
         var maDuAn = '@Model.MaDuAn';
+        var isManager = @(isAuthorizedToManage ? "true" : "false");
+        var members = [
+            @foreach (var tv in Model.Thanhviens)
+            {
+                <text>{ id: '@tv.MaThanhVien', name: '@tv.MaTaiKhoanNavigation.HoTen' },</text>
+            }
+        ];
 
         // Initialize SortableJS on each column
         document.querySelectorAll('.kanban-cards').forEach(function (el) {
@@ -122,19 +135,37 @@
                 onEnd: function (evt) {
                     var maCongViec = evt.item.getAttribute('data-id');
                     var newStatus = evt.to.getAttribute('data-status');
+                    var oldStatus = evt.from.getAttribute('data-status');
 
                     fetch('/CongViec/UpdateStatus', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ maCongViec: maCongViec, trangThai: newStatus })
                     }).then(function (res) {
-                        if (res.ok) {
+                        return res.json();
+                    }).then(function (data) {
+                        if (data.success) {
                             updateColumnCounts();
                             // Notify others via SignalR
                             if (connection && connection.state === signalR.HubConnectionState.Connected) {
                                 connection.invoke('TaskStatusChanged', maDuAn, maCongViec, newStatus);
                             }
+                        } else {
+                            // Revert drag and drop to original position
+                            if (evt.oldIndex !== undefined) {
+                                var children = evt.from.children;
+                                if (evt.oldIndex >= children.length) {
+                                    evt.from.appendChild(evt.item);
+                                } else {
+                                    evt.from.insertBefore(evt.item, children[evt.oldIndex]);
+                                }
+                            } else {
+                                evt.from.appendChild(evt.item);
+                            }
+                            alert(data.message || 'Thao tác không thành công.');
                         }
+                    }).catch(function (err) {
+                        evt.from.appendChild(evt.item);
                     });
                 }
             });
@@ -175,7 +206,20 @@
                     html += '<p><strong>Deadline:</strong> ' + (data.deadline || 'Chưa đặt') + '</p>';
                     html += '<p><strong>Ưu tiên:</strong> ' + data.mucDoUuTien + '</p>';
                     html += '<p><strong>Trạng thái:</strong> ' + data.trangThai + '</p>';
-                    html += '<p><strong>Người phụ trách:</strong> ' + (data.assignee || 'Chưa phân công') + '</p>';
+                    
+                    var assigneeHtml = '';
+                    if (isManager) {
+                        assigneeHtml = '<select class="form-select d-inline-block w-auto border-2 ms-2" onchange="assignTask(\'' + maCongViec + '\', this.value)">';
+                        assigneeHtml += '<option value="">-- Chưa phân công --</option>';
+                        members.forEach(function (m) {
+                            var selected = (data.assigneeId === m.id) ? 'selected' : '';
+                            assigneeHtml += '<option value="' + m.id + '" ' + selected + '>' + m.name + '</option>';
+                        });
+                        assigneeHtml += '</select>';
+                    } else {
+                        assigneeHtml = '<span>' + (data.assignee || 'Chưa phân công') + '</span>';
+                    }
+                    html += '<p><strong>Người phụ trách:</strong> ' + assigneeHtml + '</p>';
                     document.getElementById('taskModalBody').innerHTML = html;
 
                     var commentHtml = '';
@@ -193,6 +237,38 @@
 
                     new bootstrap.Modal(document.getElementById('taskDetailModal')).show();
                 });
+        }
+
+        function assignTask(maCongViec, maThanhVien) {
+            var urlParams = new URLSearchParams();
+            urlParams.append('maCongViec', maCongViec);
+            urlParams.append('maThanhVien', maThanhVien);
+
+            fetch('/CongViec/Assign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: urlParams
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    var card = document.querySelector('[data-id="' + maCongViec + '"]');
+                    if (card) {
+                        var assigneeDiv = card.querySelector('.card-assignee');
+                        if (assigneeDiv) {
+                            if (maThanhVien) {
+                                var selectedText = '';
+                                members.forEach(function(m) {
+                                    if (m.id === maThanhVien) selectedText = m.name;
+                                });
+                                assigneeDiv.innerHTML = '<div class="mini-avatar">' + selectedText[0].toUpperCase() + '</div><span>' + selectedText + '</span>';
+                            } else {
+                                assigneeDiv.innerHTML = '<span class="text-muted"><i class="fas fa-user-slash me-1"></i>Chưa phân công</span>';
+                            }
+                        }
+                    }
+                } else {
+                    alert(data.message || 'Phân công thất bại.');
+                }
+            });
         }
 
         // Comment input enable/disable

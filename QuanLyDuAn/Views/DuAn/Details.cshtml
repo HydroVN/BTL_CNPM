@@ -78,8 +78,17 @@
                 <div class="mb-3">
                     <small class="text-muted d-block">Trạng thái</small>
                     @{
-                        var badgeClass = Model.TrangThai switch { "ChuaThucHien" => "badge-chua", "DangThucHien" => "badge-dang", "DaHoanThanh" => "badge-xong", _ => "badge-chua" };
-                        var statusText = Model.TrangThai switch { "ChuaThucHien" => "Chưa thực hiện", "DangThucHien" => "Đang thực hiện", "DaHoanThanh" => "Đã hoàn thành", _ => Model.TrangThai };
+                        string computedStatus = "ChuaThucHien";
+                        if (totalTasks > 0)
+                        {
+                            computedStatus = (progress == 100) ? "DaHoanThanh" : "DangThucHien";
+                        }
+                        else
+                        {
+                            computedStatus = Model.TrangThai;
+                        }
+                        var badgeClass = computedStatus switch { "ChuaThucHien" => "badge-chua", "DangThucHien" => "badge-dang", "DaHoanThanh" => "badge-xong", _ => "badge-chua" };
+                        var statusText = computedStatus switch { "ChuaThucHien" => "Chưa thực hiện", "DangThucHien" => "Đang thực hiện", "DaHoanThanh" => "Đã hoàn thành", _ => computedStatus };
                     }
                     <span class="badge-status @badgeClass">@statusText</span>
                 </div>

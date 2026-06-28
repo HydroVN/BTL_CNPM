@@ -148,33 +148,51 @@ namespace QuanLyDuAn.Controllers
                 }
             }
 
+            await DuAnController.SyncProjectStatusAsync(_context, maDuAn);
+
             TempData["Success"] = "Thêm công việc thành công!";
             return RedirectToAction("Details", "DuAn", new { id = maDuAn });
         }
 
         // ========== UC#12: PHÂN CÔNG CÔNG VIỆC ==========
         [HttpPost]
-        public async Task<IActionResult> Assign(string maCongViec, string maThanhVien)
+        public async Task<IActionResult> Assign(string maCongViec, string? maThanhVien)
         {
-            var cv = await _context.Congviecs.Include(c => c.MaDuAnNavigation).FirstOrDefaultAsync(c => c.MaCongViec == maCongViec);
+            var cv = await _context.Congviecs
+                .Include(c => c.MaDuAnNavigation).ThenInclude(d => d.MaWorkspaceNavigation)
+                .FirstOrDefaultAsync(c => c.MaCongViec == maCongViec);
             if (cv == null) return NotFound();
 
-            cv.MaThanhVien = maThanhVien;
+            var maTk = HttpContext.Session.GetString("MaTaiKhoan")!;
+            var vaiTro = HttpContext.Session.GetString("VaiTro");
+
+            var isWorkspaceOwner = cv.MaDuAnNavigation.MaWorkspaceNavigation.MaTaiKhoan == maTk;
+            var isPm = await _context.Thanhviens.AnyAsync(tv => tv.MaDuAn == cv.MaDuAn && tv.MaTaiKhoan == maTk && tv.VaiTroDuAn == "PM");
+
+            if (!isWorkspaceOwner && !isPm && vaiTro != "Admin")
+            {
+                return Json(new { success = false, message = "Chỉ người quản lý dự án mới có quyền phân công công việc." });
+            }
+
+            cv.MaThanhVien = string.IsNullOrEmpty(maThanhVien) ? null : maThanhVien;
             await _context.SaveChangesAsync();
 
             // Notification
-            var tv = await _context.Thanhviens.FindAsync(maThanhVien);
-            if (tv != null)
+            if (!string.IsNullOrEmpty(maThanhVien))
             {
-                _context.Thongbaos.Add(new Thongbao
+                var tv = await _context.Thanhviens.FindAsync(maThanhVien);
+                if (tv != null)
                 {
-                    MaThongBao = Guid.NewGuid().ToString("N")[..10].ToUpper(),
-                    MaTaiKhoan = tv.MaTaiKhoan,
-                    NoiDung = $"Bạn được phân công công việc \"{cv.TenCongViec}\"",
-                    TrangThai = "ChuaDoc",
-                    ThoiGian = DateTime.Now
-                });
-                await _context.SaveChangesAsync();
+                    _context.Thongbaos.Add(new Thongbao
+                    {
+                        MaThongBao = Guid.NewGuid().ToString("N")[..10].ToUpper(),
+                        MaTaiKhoan = tv.MaTaiKhoan,
+                        NoiDung = $"Bạn được phân công công việc \"{cv.TenCongViec}\"",
+                        TrangThai = "ChuaDoc",
+                        ThoiGian = DateTime.Now
+                    });
+                    await _context.SaveChangesAsync();
+                }
             }
 
             return Json(new { success = true });
@@ -196,6 +214,7 @@ namespace QuanLyDuAn.Controllers
                 _context.Congviecs.Remove(cv);
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Xóa công việc thành công!";
+                await DuAnController.SyncProjectStatusAsync(_context, maDuAn);
             }
 
             return RedirectToAction("Details", "DuAn", new { id = maDuAn });
@@ -205,6 +224,7 @@ namespace QuanLyDuAn.Controllers
         public async Task<IActionResult> Board(string maDuAn)
         {
             var duAn = await _context.Duans
+                .Include(d => d.MaWorkspaceNavigation)
                 .Include(d => d.Congviecs).ThenInclude(c => c.MaThanhVienNavigation)
                     .ThenInclude(tv => tv!.MaTaiKhoanNavigation)
                 .Include(d => d.Thanhviens).ThenInclude(tv => tv.MaTaiKhoanNavigation)
@@ -219,11 +239,32 @@ namespace QuanLyDuAn.Controllers
         [HttpPost]
         public async Task<IActionResult> UpdateStatus([FromBody] UpdateStatusRequest request)
         {
-            var cv = await _context.Congviecs.FindAsync(request.MaCongViec);
+            var cv = await _context.Congviecs
+                .Include(c => c.MaDuAnNavigation).ThenInclude(d => d.MaWorkspaceNavigation)
+                .FirstOrDefaultAsync(c => c.MaCongViec == request.MaCongViec);
             if (cv == null) return NotFound();
+
+            var maTk = HttpContext.Session.GetString("MaTaiKhoan")!;
+            var vaiTro = HttpContext.Session.GetString("VaiTro");
+
+            // Check if current user is Workspace Creator or Admin
+            var isWorkspaceOwner = cv.MaDuAnNavigation.MaWorkspaceNavigation.MaTaiKhoan == maTk;
+            var isPm = await _context.Thanhviens.AnyAsync(tv => tv.MaDuAn == cv.MaDuAn && tv.MaTaiKhoan == maTk && tv.VaiTroDuAn == "PM");
+            var isManager = isWorkspaceOwner || isPm || vaiTro == "Admin";
+
+            // Check if assigned to the current user
+            var myMemberRecord = await _context.Thanhviens
+                .FirstOrDefaultAsync(tv => tv.MaDuAn == cv.MaDuAn && tv.MaTaiKhoan == maTk);
+            var isAssignedToMe = myMemberRecord != null && cv.MaThanhVien == myMemberRecord.MaThanhVien;
+
+            if (!isManager && !isAssignedToMe)
+            {
+                return Json(new { success = false, message = "Bạn chỉ có thể cập nhật tiến trình của công việc được giao cho bạn." });
+            }
 
             cv.TrangThai = request.TrangThai;
             await _context.SaveChangesAsync();
+            await DuAnController.SyncProjectStatusAsync(_context, cv.MaDuAn);
 
             return Json(new { success = true });
         }

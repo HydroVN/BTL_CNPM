@@ -53,16 +53,23 @@ namespace QuanLyDuAn.Controllers
                 query = query.Where(d => d.TenDuAn.Contains(search) || d.MaDuAn.Contains(search));
             }
 
-            // Filter by status
-            if (!string.IsNullOrEmpty(trangThai))
-            {
-                query = query.Where(d => d.TrangThai == trangThai);
-            }
-
             // Security: Only see projects in workspaces owned by user OR projects they are a member of
             query = query.Where(d => d.MaWorkspaceNavigation.MaTaiKhoan == maTk || d.Thanhviens.Any(tv => tv.MaTaiKhoan == maTk));
 
             var projects = await query.OrderByDescending(d => d.NgayBatDau).ToListAsync();
+
+            // Filter by computed status
+            if (!string.IsNullOrEmpty(trangThai))
+            {
+                projects = projects.Where(d => {
+                    var total = d.Congviecs.Count;
+                    if (total == 0) return d.TrangThai == trangThai;
+                    var done = d.Congviecs.Count(c => c.TrangThai == "Done");
+                    var computed = (done == total) ? "DaHoanThanh" : "DangThucHien";
+                    return computed == trangThai;
+                }).ToList();
+            }
+
             return View(projects);
         }
 
@@ -120,6 +127,7 @@ namespace QuanLyDuAn.Controllers
         {
             var duAn = await _context.Duans
                 .Include(d => d.MaWorkspaceNavigation)
+                .Include(d => d.Congviecs)
                 .FirstOrDefaultAsync(d => d.MaDuAn == id);
 
             if (duAn == null)
@@ -149,6 +157,7 @@ namespace QuanLyDuAn.Controllers
         {
             var duAn = await _context.Duans
                 .Include(d => d.MaWorkspaceNavigation)
+                .Include(d => d.Congviecs)
                 .FirstOrDefaultAsync(d => d.MaDuAn == maDuAn);
 
             if (duAn == null)
@@ -179,7 +188,17 @@ namespace QuanLyDuAn.Controllers
             duAn.MoTa = moTa;
             duAn.NgayBatDau = ngayBatDau;
             duAn.NgayKetThuc = ngayKetThuc;
-            duAn.TrangThai = trangThai;
+
+            var totalTasks = duAn.Congviecs.Count;
+            if (totalTasks > 0)
+            {
+                var doneTasks = duAn.Congviecs.Count(c => c.TrangThai == "Done");
+                duAn.TrangThai = (doneTasks == totalTasks) ? "DaHoanThanh" : "DangThucHien";
+            }
+            else
+            {
+                duAn.TrangThai = trangThai;
+            }
 
             await _context.SaveChangesAsync();
 
@@ -248,6 +267,33 @@ namespace QuanLyDuAn.Controllers
             }
 
             return View(duAn);
+        }
+
+        public static async Task SyncProjectStatusAsync(BtlCnpmContext context, string maDuAn)
+        {
+            var duAn = await context.Duans
+                .Include(d => d.Congviecs)
+                .FirstOrDefaultAsync(d => d.MaDuAn == maDuAn);
+            if (duAn == null) return;
+
+            var totalTasks = duAn.Congviecs.Count;
+            if (totalTasks == 0)
+            {
+                duAn.TrangThai = "ChuaThucHien";
+            }
+            else
+            {
+                var doneTasks = duAn.Congviecs.Count(c => c.TrangThai == "Done");
+                if (doneTasks == totalTasks)
+                {
+                    duAn.TrangThai = "DaHoanThanh";
+                }
+                else
+                {
+                    duAn.TrangThai = "DangThucHien";
+                }
+            }
+            await context.SaveChangesAsync();
         }
     }
 }

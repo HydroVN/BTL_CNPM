@@ -88,19 +88,30 @@ else
                         var doneTasks = da.Congviecs.Count(c => c.TrangThai == "Done");
                         var progress = totalTasks > 0 ? (int)(doneTasks * 100.0 / totalTasks) : 0;
 
-                        var badgeClass = da.TrangThai switch
+                        // Dynamically calculate status
+                        string computedStatus = "ChuaThucHien";
+                        if (totalTasks > 0)
+                        {
+                            computedStatus = (progress == 100) ? "DaHoanThanh" : "DangThucHien";
+                        }
+                        else
+                        {
+                            computedStatus = da.TrangThai;
+                        }
+
+                        var badgeClass = computedStatus switch
                         {
                             "ChuaThucHien" => "badge-chua",
                             "DangThucHien" => "badge-dang",
                             "DaHoanThanh" => "badge-xong",
                             _ => "badge-chua"
                         };
-                        var statusText = da.TrangThai switch
+                        var statusText = computedStatus switch
                         {
                             "ChuaThucHien" => "Chưa thực hiện",
                             "DangThucHien" => "Đang thực hiện",
                             "DaHoanThanh" => "Đã hoàn thành",
-                            _ => da.TrangThai
+                            _ => computedStatus
                         };
 
                         <tr>
