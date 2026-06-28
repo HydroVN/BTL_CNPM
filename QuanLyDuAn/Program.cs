@@ -49,40 +49,47 @@ app.MapControllerRoute(
 app.MapHub<ProjectHub>("/projectHub");
 
 // Seeding Data on Startup
-using (var scope = app.Services.CreateScope())
+try
 {
-    var context = scope.ServiceProvider.GetRequiredService<BtlCnpmContext>();
-    
-    // Seed Goidichvu if empty
-    if (!context.Goidichvus.Any())
+    using (var scope = app.Services.CreateScope())
     {
-        context.Goidichvus.AddRange(
-            new Goidichvu { MaGoi = "FREE", TenGoi = "Free Plan", Gia = 0, SoDuAnToiDa = 5, SoTvToiDa = 10, DungLuongMax = 1024, MoTa = "Gói miễn phí cho cá nhân và nhóm nhỏ" },
-            new Goidichvu { MaGoi = "PRO", TenGoi = "Pro Plan", Gia = 150000, SoDuAnToiDa = 50, SoTvToiDa = 100, DungLuongMax = 10240, MoTa = "Gói chuyên nghiệp cho doanh nghiệp vừa" },
-            new Goidichvu { MaGoi = "ENT", TenGoi = "Enterprise Plan", Gia = 500000, SoDuAnToiDa = 9999, SoTvToiDa = 9999, DungLuongMax = 102400, MoTa = "Gói không giới hạn cho tổ chức lớn" }
-        );
-        context.SaveChanges();
-    }
-
-    // Seed test admin user if empty
-    if (!context.Taikhoans.Any(t => t.Email == "admin@projectflow.com"))
-    {
-        var hasher = new PasswordHasher<Taikhoan>();
-        var adminUser = new Taikhoan
+        var context = scope.ServiceProvider.GetRequiredService<BtlCnpmContext>();
+        
+        // Seed Goidichvu if empty
+        if (!context.Goidichvus.Any())
         {
-            MaTaiKhoan = "ADMIN001",
-            MaGoi = "FREE",
-            HoTen = "Admin Test",
-            Email = "admin@projectflow.com",
-            SoDienThoai = "0123456789",
-            VaiTro = "Admin",
-            TrangThai = "KichHoat",
-            NgayTao = DateTime.Now
-        };
-        adminUser.MatKhau = hasher.HashPassword(adminUser, "admin123");
-        context.Taikhoans.Add(adminUser);
-        context.SaveChanges();
+            context.Goidichvus.AddRange(
+                new Goidichvu { MaGoi = "FREE", TenGoi = "Free Plan", Gia = 0, SoDuAnToiDa = 5, SoTvToiDa = 10, DungLuongMax = 1024, MoTa = "Gói miễn phí cho cá nhân và nhóm nhỏ" },
+                new Goidichvu { MaGoi = "PRO", TenGoi = "Pro Plan", Gia = 150000, SoDuAnToiDa = 50, SoTvToiDa = 100, DungLuongMax = 10240, MoTa = "Gói chuyên nghiệp cho doanh nghiệp vừa" },
+                new Goidichvu { MaGoi = "ENT", TenGoi = "Enterprise Plan", Gia = 500000, SoDuAnToiDa = 9999, SoTvToiDa = 9999, DungLuongMax = 102400, MoTa = "Gói không giới hạn cho tổ chức lớn" }
+            );
+            context.SaveChanges();
+        }
+
+        // Seed test admin user if empty
+        if (!context.Taikhoans.Any(t => t.Email == "admin@projectflow.com"))
+        {
+            var hasher = new PasswordHasher<Taikhoan>();
+            var adminUser = new Taikhoan
+            {
+                MaTaiKhoan = "ADMIN001",
+                MaGoi = "FREE",
+                HoTen = "Admin Test",
+                Email = "admin@projectflow.com",
+                SoDienThoai = "0123456789",
+                VaiTro = "Admin",
+                TrangThai = "KichHoat",
+                NgayTao = DateTime.Now
+            };
+            adminUser.MatKhau = hasher.HashPassword(adminUser, "admin123");
+            context.Taikhoans.Add(adminUser);
+            context.SaveChanges();
+        }
     }
+}
+catch (Exception ex)
+{
+    Console.WriteLine("Database seeding skipped or failed on startup: " + ex.Message);
 }
 
 app.Run();
