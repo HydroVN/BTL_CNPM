@@ -1,0 +1,75 @@
+@{
+    ViewData["Title"] = "Thêm công việc";
+    var duAn = ViewBag.DuAn as QuanLyDuAn.Models.Duan;
+    var thanhViens = ViewBag.ThanhViens as List<QuanLyDuAn.Models.Thanhvien>;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-plus-circle text-primary"></i>
+                <span>Thêm công việc - @duAn?.TenDuAn</span>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger py-2">
+                        <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+                    </div>
+                }
+
+                <form method="post" asp-action="Create" enctype="multipart/form-data">
+                    <input type="hidden" name="maDuAn" value="@duAn?.MaDuAn" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Tên công việc <span class="text-danger">*</span></label>
+                        <input type="text" name="tenCongViec" class="form-control" placeholder="Nhập tên công việc" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả nhiệm vụ</label>
+                        <textarea name="moTa" class="form-control" rows="3" placeholder="Mô tả chi tiết nhiệm vụ"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Hạn hoàn thành (Deadline)</label>
+                            <input type="date" name="deadline" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Mức độ ưu tiên</label>
+                            <select name="mucDoUuTien" class="form-select">
+                                <option value="Thap">🟢 Thấp</option>
+                                <option value="TrungBinh" selected>🟡 Trung bình</option>
+                                <option value="Cao">🟠 Cao</option>
+                                <option value="KhanCap">🔴 Khẩn cấp</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phân công cho</label>
+                        <select name="maThanhVien" class="form-select">
+                            <option value="">-- Chưa phân công --</option>
+                            @if (thanhViens != null)
+                            {
+                                foreach (var tv in thanhViens)
+                                {
+                                    <option value="@tv.MaThanhVien">@tv.MaTaiKhoanNavigation.HoTen (@tv.VaiTroDuAn)</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tệp đính kèm</label>
+                        <input type="file" name="tepDinhKem" class="form-control" />
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-save me-2"></i>Lưu công việc
+                        </button>
+                        <a href="@Url.Action("Details", "DuAn", new { id = duAn?.MaDuAn })" class="btn btn-outline-custom">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,56 @@
+@model List<QuanLyDuAn.Models.Workspace>
+@{
+    ViewData["Title"] = "Workspace";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Không gian làm việc</h4>
+        <p class="text-muted mb-0" style="font-size:.88rem;">Quản lý các Workspace của bạn</p>
+    </div>
+    <a href="@Url.Action("Create")" class="btn btn-primary-custom">
+        <i class="fas fa-plus me-2"></i>Tạo Workspace
+    </a>
+</div>
+
+@if (Model.Count == 0)
+{
+    <div class="empty-state">
+        <i class="fas fa-th-large d-block"></i>
+        <h5>Chưa có Workspace nào</h5>
+        <p>Bắt đầu bằng cách tạo một Workspace mới để quản lý dự án.</p>
+        <a href="@Url.Action("Create")" class="btn btn-primary-custom mt-2">
+            <i class="fas fa-plus me-2"></i>Tạo Workspace đầu tiên
+        </a>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var ws in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100" style="cursor:pointer;" onclick="location.href='@Url.Action("Index", "DuAn", new { maWorkspace = ws.MaWorkspace })'">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;">
+                                @ws.TenWorkspace[0].ToString().ToUpper()
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">@ws.TenWorkspace</h6>
+                                <small class="text-muted">@ws.NgayTao.ToString("dd/MM/yyyy")</small>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(ws.MoTa))
+                        {
+                            <p class="text-muted mb-3" style="font-size:.85rem;">@ws.MoTa</p>
+                        }
+                        <div class="d-flex align-items-center gap-3" style="font-size:.82rem;color:var(--gray-500);">
+                            <span><i class="fas fa-folder me-1"></i>@ws.Duans.Count dự án</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

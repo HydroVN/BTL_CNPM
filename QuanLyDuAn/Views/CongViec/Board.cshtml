@@ -1,0 +1,241 @@
+@model QuanLyDuAn.Models.Duan
+@{
+    ViewData["Title"] = "Board - " + Model.TenDuAn;
+    var todo = Model.Congviecs.Where(c => c.TrangThai == "ToDo").ToList();
+    var inProgress = Model.Congviecs.Where(c => c.TrangThai == "InProgress").ToList();
+    var review = Model.Congviecs.Where(c => c.TrangThai == "Review").ToList();
+    var done = Model.Congviecs.Where(c => c.TrangThai == "Done").ToList();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h4 class="fw-bold mb-1">Board View - @Model.TenDuAn</h4>
+        <p class="text-muted mb-0" style="font-size:.88rem;">Kéo thả để cập nhật trạng thái công việc</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("Create", "CongViec", new { maDuAn = Model.MaDuAn })" class="btn btn-primary-custom">
+            <i class="fas fa-plus me-2"></i>Thêm công việc
+        </a>
+        <a href="@Url.Action("Details", "DuAn", new { id = Model.MaDuAn })" class="btn btn-outline-custom">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+</div>
+
+<div class="kanban-wrapper">
+    <!-- To Do -->
+    <div class="kanban-column col-todo">
+        <div class="kanban-column-header">
+            <span><i class="fas fa-circle me-2" style="font-size:.5rem;vertical-align:middle;"></i>To Do</span>
+            <span class="count">@todo.Count</span>
+        </div>
+        <div class="kanban-cards" data-status="ToDo">
+            @foreach (var cv in todo)
+            {
+                @await Html.PartialAsync("_TaskCard", cv)
+            }
+        </div>
+    </div>
+
+    <!-- In Progress -->
+    <div class="kanban-column col-inprogress">
+        <div class="kanban-column-header">
+            <span><i class="fas fa-circle me-2" style="font-size:.5rem;vertical-align:middle;"></i>In Progress</span>
+            <span class="count">@inProgress.Count</span>
+        </div>
+        <div class="kanban-cards" data-status="InProgress">
+            @foreach (var cv in inProgress)
+            {
+                @await Html.PartialAsync("_TaskCard", cv)
+            }
+        </div>
+    </div>
+
+    <!-- Review -->
+    <div class="kanban-column col-review">
+        <div class="kanban-column-header">
+            <span><i class="fas fa-circle me-2" style="font-size:.5rem;vertical-align:middle;"></i>Review</span>
+            <span class="count">@review.Count</span>
+        </div>
+        <div class="kanban-cards" data-status="Review">
+            @foreach (var cv in review)
+            {
+                @await Html.PartialAsync("_TaskCard", cv)
+            }
+        </div>
+    </div>
+
+    <!-- Done -->
+    <div class="kanban-column col-done">
+        <div class="kanban-column-header">
+            <span><i class="fas fa-circle me-2" style="font-size:.5rem;vertical-align:middle;"></i>Done</span>
+            <span class="count">@done.Count</span>
+        </div>
+        <div class="kanban-cards" data-status="Done">
+            @foreach (var cv in done)
+            {
+                @await Html.PartialAsync("_TaskCard", cv)
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Task Detail Modal -->
+<div class="modal fade" id="taskDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="taskModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="taskModalBody"></div>
+                <hr />
+                <h6 class="fw-bold mb-3"><i class="fas fa-comments me-2"></i>Bình luận</h6>
+                <div class="comment-list" id="commentList"></div>
+                <div class="mt-3">
+                    <div class="d-flex gap-2">
+                        <input type="hidden" id="commentTaskId" />
+                        <input type="text" id="commentInput" class="form-control" placeholder="Viết bình luận..." />
+                        <button class="btn btn-primary-custom" id="btnSendComment" disabled onclick="sendComment()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        var maDuAn = '@Model.MaDuAn';
+
+        // Initialize SortableJS on each column
+        document.querySelectorAll('.kanban-cards').forEach(function (el) {
+            new Sortable(el, {
+                group: 'kanban',
+                animation: 200,
+                ghostClass: 'sortable-ghost',
+                onEnd: function (evt) {
+                    var maCongViec = evt.item.getAttribute('data-id');
+                    var newStatus = evt.to.getAttribute('data-status');
+
+                    fetch('/CongViec/UpdateStatus', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ maCongViec: maCongViec, trangThai: newStatus })
+                    }).then(function (res) {
+                        if (res.ok) {
+                            updateColumnCounts();
+                            // Notify others via SignalR
+                            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                                connection.invoke('TaskStatusChanged', maDuAn, maCongViec, newStatus);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        function updateColumnCounts() {
+            document.querySelectorAll('.kanban-column').forEach(function (col) {
+                var count = col.querySelectorAll('.kanban-card').length;
+                col.querySelector('.count').textContent = count;
+            });
+        }
+
+        // SignalR
+        var connection = new signalR.HubConnectionBuilder().withUrl('/projectHub').build();
+        connection.start().then(function () {
+            connection.invoke('JoinProject', maDuAn);
+        });
+
+        connection.on('OnTaskStatusChanged', function (maCongViec, newStatus) {
+            var card = document.querySelector('[data-id="' + maCongViec + '"]');
+            if (card) {
+                var targetCol = document.querySelector('[data-status="' + newStatus + '"]');
+                if (targetCol) {
+                    targetCol.appendChild(card);
+                    updateColumnCounts();
+                }
+            }
+        });
+
+        // Task Detail Modal
+        function openTaskDetail(maCongViec) {
+            document.getElementById('commentTaskId').value = maCongViec;
+            fetch('/BinhLuan/GetTaskDetail?maCongViec=' + maCongViec)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('taskModalTitle').textContent = data.tenCongViec;
+                    var html = '<p><strong>Mô tả:</strong> ' + (data.moTa || 'Không có') + '</p>';
+                    html += '<p><strong>Deadline:</strong> ' + (data.deadline || 'Chưa đặt') + '</p>';
+                    html += '<p><strong>Ưu tiên:</strong> ' + data.mucDoUuTien + '</p>';
+                    html += '<p><strong>Trạng thái:</strong> ' + data.trangThai + '</p>';
+                    html += '<p><strong>Người phụ trách:</strong> ' + (data.assignee || 'Chưa phân công') + '</p>';
+                    document.getElementById('taskModalBody').innerHTML = html;
+
+                    var commentHtml = '';
+                    if (data.comments && data.comments.length > 0) {
+                        data.comments.forEach(function (c) {
+                            commentHtml += '<div class="comment-item"><div class="comment-avatar">' + c.avatar + '</div>';
+                            commentHtml += '<div class="comment-body"><span class="comment-author">' + c.hoTen + '</span>';
+                            commentHtml += '<span class="comment-time">' + c.thoiGian + '</span>';
+                            commentHtml += '<div class="comment-text">' + c.noiDung + '</div></div></div>';
+                        });
+                    } else {
+                        commentHtml = '<p class="text-muted text-center" style="font-size:.85rem;">Chưa có bình luận</p>';
+                    }
+                    document.getElementById('commentList').innerHTML = commentHtml;
+
+                    new bootstrap.Modal(document.getElementById('taskDetailModal')).show();
+                });
+        }
+
+        // Comment input enable/disable
+        document.getElementById('commentInput').addEventListener('input', function () {
+            document.getElementById('btnSendComment').disabled = this.value.trim() === '';
+        });
+
+        function sendComment() {
+            var maCongViec = document.getElementById('commentTaskId').value;
+            var noiDung = document.getElementById('commentInput').value.trim();
+            if (!noiDung) return;
+
+            fetch('/BinhLuan/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maCongViec: maCongViec, noiDung: noiDung })
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    var html = '<div class="comment-item"><div class="comment-avatar">' + data.avatar + '</div>';
+                    html += '<div class="comment-body"><span class="comment-author">' + data.hoTen + '</span>';
+                    html += '<span class="comment-time">Vừa xong</span>';
+                    html += '<div class="comment-text">' + noiDung + '</div></div></div>';
+                    document.getElementById('commentList').insertAdjacentHTML('beforeend', html);
+                    document.getElementById('commentInput').value = '';
+                    document.getElementById('btnSendComment').disabled = true;
+
+                    if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                        connection.invoke('NewComment', maDuAn, maCongViec, data.hoTen, noiDung, 'Vừa xong');
+                    }
+                }
+            });
+        }
+
+        // Real-time comments
+        connection.on('OnNewComment', function (maCongViec, hoTen, noiDung, thoiGian) {
+            var currentTaskId = document.getElementById('commentTaskId').value;
+            if (currentTaskId === maCongViec) {
+                var html = '<div class="comment-item"><div class="comment-avatar">' + hoTen[0].toUpperCase() + '</div>';
+                html += '<div class="comment-body"><span class="comment-author">' + hoTen + '</span>';
+                html += '<span class="comment-time">' + thoiGian + '</span>';
+                html += '<div class="comment-text">' + noiDung + '</div></div></div>';
+                document.getElementById('commentList').insertAdjacentHTML('beforeend', html);
+            }
+        });
+    </script>
+}

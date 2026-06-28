@@ -1,0 +1,145 @@
+@{
+    ViewData["Title"] = "Báo cáo Tiến độ Dự án";
+    var projects = ViewBag.Projects as List<QuanLyDuAn.Models.Duan>;
+    var selectedProject = ViewBag.SelectedProject as string;
+    int totalTasks = ViewBag.TotalTasks;
+    int todoCount = ViewBag.TodoCount;
+    int inProgressCount = ViewBag.InProgressCount;
+    int reviewCount = ViewBag.ReviewCount;
+    int doneCount = ViewBag.DoneCount;
+    var progress = totalTasks > 0 ? (int)(doneCount * 100.0 / totalTasks) : 0;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h4 class="fw-bold mb-1">Báo cáo Tiến độ</h4>
+        <p class="text-muted mb-0" style="font-size:.88rem;">Thống kê tổng quan công việc</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("ExportExcel", new { maDuAn = selectedProject })" class="btn btn-outline-custom">
+            <i class="fas fa-file-excel me-2 text-success"></i>Xuất Excel
+        </a>
+        <a href="@Url.Action("ExportPdf", new { maDuAn = selectedProject })" class="btn btn-outline-custom" target="_blank">
+            <i class="fas fa-file-pdf me-2 text-danger"></i>Xuất PDF
+        </a>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Lọc theo dự án</label>
+                <select name="maDuAn" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Tất cả dự án --</option>
+                    @if (projects != null)
+                    {
+                        foreach (var p in projects)
+                        {
+                            <option value="@p.MaDuAn" selected="@(selectedProject == p.MaDuAn)">@p.TenDuAn</option>
+                        }
+                    }
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+            <div class="stat-value">@totalTasks</div>
+            <div class="stat-label">Tổng công việc</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card" style="background:linear-gradient(135deg,#64748b,#475569);color:#fff;">
+            <div class="stat-icon"><i class="fas fa-list"></i></div>
+            <div class="stat-value">@todoCount</div>
+            <div class="stat-label">To Do</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-warning">
+            <div class="stat-icon"><i class="fas fa-spinner"></i></div>
+            <div class="stat-value">@inProgressCount</div>
+            <div class="stat-label">In Progress</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card stat-success">
+            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-value">@doneCount</div>
+            <div class="stat-label">Done</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-chart-pie me-2"></i>Phân bổ theo trạng thái</div>
+            <div class="card-body">
+                <canvas id="statusChart" height="280"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header"><i class="fas fa-chart-bar me-2"></i>Tiến độ từng dự án</div>
+            <div class="card-body">
+                <canvas id="projectChart" height="280"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Pie chart
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['To Do', 'In Progress', 'Review', 'Done'],
+                datasets: [{
+                    data: [@todoCount, @inProgressCount, @reviewCount, @doneCount],
+                    backgroundColor: ['#94a3b8', '#3b82f6', '#f59e0b', '#22c55e'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Bar chart per project
+        var projectNames = [@Html.Raw(string.Join(",", projects?.Select(p => $"'{p.TenDuAn}'") ?? []))];
+        var projectDone = [@Html.Raw(string.Join(",", projects?.Select(p => p.Congviecs.Count(c => c.TrangThai == "Done")) ?? []))];
+        var projectTotal = [@Html.Raw(string.Join(",", projects?.Select(p => p.Congviecs.Count) ?? []))];
+
+        new Chart(document.getElementById('projectChart'), {
+            type: 'bar',
+            data: {
+                labels: projectNames,
+                datasets: [
+                    { label: 'Hoàn thành', data: projectDone, backgroundColor: '#22c55e' },
+                    { label: 'Tổng', data: projectTotal, backgroundColor: '#e2e8f0' }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    </script>
+}

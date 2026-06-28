@@ -1,0 +1,130 @@
+@model List<QuanLyDuAn.Models.Taikhoan>
+@{
+    ViewData["Title"] = "Quản trị tài khoản";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h4 class="fw-bold mb-1"><i class="fas fa-user-shield me-2 text-primary"></i>Quản trị tài khoản</h4>
+        <p class="text-muted mb-0" style="font-size:.88rem;">Quản lý toàn bộ người dùng và cấu hình thông tin tài khoản trên hệ thống</p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table-custom">
+            <thead>
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Số điện thoại</th>
+                    <th>Vai trò</th>
+                    <th>Gói dịch vụ</th>
+                    <th>Ngày tạo</th>
+                    <th class="text-end">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">Chưa có tài khoản nào đăng ký</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="user-avatar" style="width:32px;height:32px;font-size:.75rem;">
+                                        @user.HoTen[0].ToString().ToUpper()
+                                    </div>
+                                    <span class="fw-semibold">@user.HoTen</span>
+                                </div>
+                            </td>
+                            <td>@user.Email</td>
+                            <td>@(user.SoDienThoai ?? "N/A")</td>
+                            <td>
+                                @if (user.VaiTro == "Admin")
+                                {
+                                    <span class="badge bg-danger">Admin</span>
+                                }
+                                else if (user.VaiTro == "Manager")
+                                {
+                                    <span class="badge bg-warning text-dark">Manager</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Member</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark">@(user.MaGoiNavigation?.TenGoi ?? "Chưa có gói")</span>
+                            </td>
+                            <td style="font-size:.85rem;">@user.NgayTao.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-primary btn-reset-pw" 
+                                        data-id="@user.MaTaiKhoan" 
+                                        data-name="@user.HoTen" 
+                                        data-email="@user.Email" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#resetPasswordModal">
+                                    <i class="fas fa-key me-1"></i>Đổi mật khẩu
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Đặt lại mật khẩu -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="resetPasswordModalLabel"><i class="fas fa-key me-2 text-primary"></i>Đặt lại mật khẩu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-action="AdminResetPassword">
+                <div class="modal-body">
+                    <input type="hidden" id="resetUserId" name="maTaiKhoan" />
+                    
+                    <p class="mb-3">
+                        Bạn đang thực hiện đặt lại mật khẩu cho tài khoản: <br />
+                        <strong id="resetUserDetail"></strong>
+                    </p>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mật khẩu mới <span class="text-danger">*</span></label>
+                        <input type="password" name="newPassword" class="form-control" placeholder="Nhập mật khẩu mới..." required minlength="6" />
+                        <div class="form-text">Mật khẩu phải dài tối thiểu 6 ký tự.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary-custom">Xác nhận cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.btn-reset-pw').on('click', function() {
+                var userId = $(this).data('id');
+                var userName = $(this).data('name');
+                var userEmail = $(this).data('email');
+
+                $('#resetUserId').val(userId);
+                $('#resetUserDetail').text(userName + ' (' + userEmail + ')');
+            });
+        });
+    </script>
+}

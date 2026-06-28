@@ -1,0 +1,105 @@
+@{
+    ViewData["Title"] = "Thêm thành viên vào dự án";
+    var duAn = ViewBag.DuAn as QuanLyDuAn.Models.Duan;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-user-plus text-primary"></i>
+                <span class="fw-bold">Mời thành viên - @duAn?.TenDuAn</span>
+            </div>
+            <div class="card-body">
+                <form id="inviteForm" method="post" asp-action="SendProjectInvite">
+                    <input type="hidden" id="maDuAn" name="maDuAn" value="@duAn?.MaDuAn" />
+
+                    <!-- Email Input -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email người nhận <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope text-muted"></i></span>
+                            <input type="email" id="inviteEmail" name="email" class="form-control" placeholder="Nhập địa chỉ email người muốn mời..." required />
+                        </div>
+                        <div id="emailFeedback" class="form-text text-danger mt-1" style="display:none;"></div>
+                    </div>
+
+                    <!-- Role Select -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Vai trò trong dự án</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user-tag text-muted"></i></span>
+                            <select name="vaiTroDuAn" class="form-select">
+                                <option value="Developer">Developer (Lập trình viên)</option>
+                                <option value="Tester">Tester (Kiểm thử viên)</option>
+                                <option value="Designer">Designer (Thiết kế)</option>
+                                <option value="PM">Project Manager (Quản lý dự án)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" id="btnSubmitInvite" class="btn btn-primary-custom">
+                            <i class="fas fa-paper-plane me-2"></i>Gửi lời mời
+                        </button>
+                        <a href="@Url.Action("Details", "DuAn", new { id = duAn?.MaDuAn })" class="btn btn-outline-custom">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            var $form = $('#inviteForm');
+            var $emailInput = $('#inviteEmail');
+            var $feedback = $('#emailFeedback');
+            var $btnSubmit = $('#btnSubmitInvite');
+
+            $form.on('submit', function(e) {
+                e.preventDefault(); // Prevent immediate submit
+                
+                var email = $emailInput.val().trim();
+                var maDuAn = $('#maDuAn').val();
+
+                if (!email) {
+                    $feedback.text('Vui lòng nhập email').show();
+                    return;
+                }
+
+                $feedback.hide();
+                $btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
+
+                // Perform AJAX validation
+                $.ajax({
+                    url: '@Url.Action("CheckEmail", "ThanhVien")',
+                    type: 'GET',
+                    data: { email: email, maDuAn: maDuAn },
+                    success: function(response) {
+                        if (response.success) {
+                            // If user exists and is valid, prompt confirm dialog
+                            var confirmInvite = confirm("Xác nhận mời " + response.name + " (" + response.email + ") vào dự án?");
+                            if (confirmInvite) {
+                                // Programmatically submit the native form
+                                $form[0].submit();
+                            } else {
+                                $btnSubmit.prop('disabled', false).html('<i class="fas fa-paper-plane me-2"></i>Gửi lời mời');
+                            }
+                        } else {
+                            // Show error message
+                            $feedback.text(response.message).show();
+                            $btnSubmit.prop('disabled', false).html('<i class="fas fa-paper-plane me-2"></i>Gửi lời mời');
+                        }
+                    },
+                    error: function() {
+                        $feedback.text('Đã xảy ra lỗi kết nối với máy chủ. Vui lòng thử lại sau.').show();
+                        $btnSubmit.prop('disabled', false).html('<i class="fas fa-paper-plane me-2"></i>Gửi lời mời');
+                    }
+                });
+            });
+        });
+    </script>
+}

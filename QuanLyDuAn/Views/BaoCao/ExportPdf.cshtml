@@ -1,0 +1,148 @@
+@model List<QuanLyDuAn.Models.Congviec>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <title>Báo cáo Công việc - Hệ thống Quản lý Dự án</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .header h2 {
+            margin: 0 0 10px 0;
+            color: #1e293b;
+        }
+        .header p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #cbd5e1;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .badge-todo { background-color: #e2e8f0; color: #475569; }
+        .badge-inprogress { background-color: #dbeafe; color: #1d4ed8; }
+        .badge-review { background-color: #fef3c7; color: #b45309; }
+        .badge-done { background-color: #dcfce7; color: #15803d; }
+        
+        .badge-low { background-color: #dcfce7; color: #15803d; }
+        .badge-medium { background-color: #fef3c7; color: #b45309; }
+        .badge-high { background-color: #fee2e2; color: #dc2626; }
+        .badge-urgent { background-color: #fecaca; color: #991b1b; }
+
+        .footer {
+            margin-top: 50px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        
+        @@media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="margin-bottom: 20px; text-align: right;">
+        <button onclick="window.print()" style="padding: 8px 16px; background-color: #6366f1; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+            In báo cáo / Lưu PDF
+        </button>
+    </div>
+
+    <div class="header">
+        <h2>BÁO CÁO CHI TIẾT CÔNG VIỆC DỰ ÁN</h2>
+        <p>Hệ thống Quản lý Dự án & Công việc</p>
+        <p>Ngày tạo: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">Mã CV</th>
+                <th style="width: 25%;">Tên công việc</th>
+                <th style="width: 20%;">Dự án</th>
+                <th style="width: 15%;">Người phụ trách</th>
+                <th style="width: 10%;">Mức ưu tiên</th>
+                <th style="width: 10%;">Hạn chót</th>
+                <th style="width: 10%;">Trạng thái</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model == null || Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="7" style="text-align: center; color: #64748b;">Không có công việc nào</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var t in Model)
+                {
+                    var taskBadge = t.TrangThai switch { "ToDo" => "badge-todo", "InProgress" => "badge-inprogress", "Review" => "badge-review", "Done" => "badge-done", _ => "badge-todo" };
+                    var taskBadgeText = t.TrangThai switch { "ToDo" => "To Do", "InProgress" => "In Progress", "Review" => "Review", "Done" => "Done", _ => t.TrangThai };
+                    
+                    var priorityBadge = t.MucDoUuTien switch { "Thap" => "badge-low", "TrungBinh" => "badge-medium", "Cao" => "badge-high", "KhanCap" => "badge-urgent", _ => "badge-medium" };
+                    var priorityText = t.MucDoUuTien switch { "Thap" => "Thấp", "TrungBinh" => "Trung bình", "Cao" => "Cao", "KhanCap" => "Khẩn cấp", _ => t.MucDoUuTien };
+
+                    var assigneeName = t.MaThanhVienNavigation?.MaTaiKhoanNavigation?.HoTen ?? "Chưa phân công";
+
+                    <tr>
+                        <td><code>@t.MaCongViec</code></td>
+                        <td style="font-weight: bold;">@t.TenCongViec</td>
+                        <td>@t.MaDuAnNavigation.TenDuAn</td>
+                        <td>@assigneeName</td>
+                        <td><span class="badge @priorityBadge">@priorityText</span></td>
+                        <td>@(t.Deadline?.ToString("dd/MM/yyyy") ?? "-")</td>
+                        <td><span class="badge @taskBadge">@taskBadgeText</span></td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Báo cáo được xuất tự động từ hệ thống ProjectFlow.</p>
+    </div>
+
+    <script>
+        // Auto trigger print dialog when loaded
+        window.addEventListener('DOMContentLoaded', (event) => {
+            setTimeout(() => { window.print(); }, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+@model QuanLyDuAn.Models.Duan
+@{
+    ViewData["Title"] = "Chỉnh sửa dự án";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-edit text-primary"></i>
+                <span>Cập nhật dự án</span>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger py-2">
+                        <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+                    </div>
+                }
+
+                <form method="post" asp-action="Edit">
+                    <input type="hidden" name="maDuAn" value="@Model.MaDuAn" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Mã dự án</label>
+                        <input type="text" class="form-control" value="@Model.MaDuAn" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tên dự án <span class="text-danger">*</span></label>
+                        <input type="text" name="tenDuAn" class="form-control" value="@Model.TenDuAn" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <textarea name="moTa" class="form-control" rows="3">@Model.MoTa</textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ngày bắt đầu</label>
+                            <input type="date" name="ngayBatDau" class="form-control" value="@Model.NgayBatDau?.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ngày kết thúc</label>
+                            <input type="date" name="ngayKetThuc" class="form-control" value="@Model.NgayKetThuc?.ToString("yyyy-MM-dd")" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select name="trangThai" class="form-select">
+                            <option value="ChuaThucHien" selected="@(Model.TrangThai == "ChuaThucHien")">🔵 Chưa thực hiện</option>
+                            <option value="DangThucHien" selected="@(Model.TrangThai == "DangThucHien")">🟡 Đang thực hiện</option>
+                            <option value="DaHoanThanh" selected="@(Model.TrangThai == "DaHoanThanh")">🔴 Đã hoàn thành</option>
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-save me-2"></i>Lưu thay đổi
+                        </button>
+                        <a href="@Url.Action("Details", new { id = Model.MaDuAn })" class="btn btn-outline-custom">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

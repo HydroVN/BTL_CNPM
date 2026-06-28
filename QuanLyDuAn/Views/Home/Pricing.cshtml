@@ -1,0 +1,69 @@
+@model List<QuanLyDuAn.Models.Goidichvu>
+@{
+    ViewData["Title"] = "Bảng giá các gói dịch vụ";
+    Layout = "_LayoutGuest";
+}
+
+<div class="py-5" style="background:#0f172a; color:#fff; min-height: 90vh;">
+    <div class="container py-5">
+        <div class="text-center mb-5 fade-in-up">
+            <h2 class="fw-bold mb-2">Bảng giá gói dịch vụ</h2>
+            <p class="text-muted" style="max-width: 500px; margin: 0 auto;">Lựa chọn gói dịch vụ phù hợp nhất cho đội ngũ của bạn</p>
+        </div>
+
+        <div class="row justify-content-center align-items-stretch g-4">
+            @if (Model == null || Model.Count == 0)
+            {
+                <div class="col-12 text-center text-muted">
+                    <p>Hiện tại chưa cấu hình gói dịch vụ nào trên hệ thống.</p>
+                </div>
+            }
+            else
+            {
+                foreach (var g in Model)
+                {
+                    var isPopular = g.TenGoi.ToLower().Contains("pro") || g.TenGoi.ToLower().Contains("premium") || g.TenGoi.ToLower().Contains("doanh nghiep");
+                    
+                    <div class="col-md-6 col-lg-4">
+                        <div class="pricing-card @(isPopular ? "popular" : "")">
+                            <h4 class="fw-bold mb-1 text-dark">@g.TenGoi</h4>
+                            <p class="text-muted small">@g.MoTa</p>
+                            <div class="price">
+                                @if (g.Gia == 0)
+                                {
+                                    <span>Miễn phí</span>
+                                }
+                                else
+                                {
+                                    @g.Gia.ToString("#,##0") <span style="font-size:1.2rem;">₫</span><span>/tháng</span>
+                                }
+                            </div>
+                            
+                            <hr style="color:var(--gray-300);" />
+                            
+                            <ul>
+                                <li><i class="fas fa-check"></i> Số dự án tối đa: <strong>@g.SoDuAnToiDa</strong></li>
+                                <li><i class="fas fa-check"></i> Số thành viên tối đa: <strong>@g.SoTvToiDa</strong></li>
+                                <li><i class="fas fa-check"></i> Dung lượng lưu trữ: <strong>@g.DungLuongMax MB</strong></li>
+                                @if (g.Gia > 0)
+                                {
+                                    <li><i class="fas fa-check"></i> Báo cáo & Dashboard nâng cao</li>
+                                    <li><i class="fas fa-check"></i> Hỗ trợ kỹ thuật 24/7</li>
+                                }
+                                else
+                                {
+                                    <li class="text-muted"><i class="fas fa-times text-danger"></i> Không có báo cáo nâng cao</li>
+                                    <li class="text-muted"><i class="fas fa-times text-danger"></i> Hỗ trợ cộng đồng</li>
+                                }
+                            </ul>
+                            
+                            <a href="@Url.Action("Register", "Account", new { plan = g.MaGoi })" class="btn @(isPopular ? "btn-primary-custom" : "btn-outline-custom") w-100 mt-auto py-2">
+                                Bắt đầu dùng thử
+                            </a>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

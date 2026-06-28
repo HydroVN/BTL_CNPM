@@ -1,0 +1,63 @@
+@{
+    ViewData["Title"] = "Thêm dự án mới";
+    var workspaces = ViewBag.Workspaces as List<QuanLyDuAn.Models.Workspace>;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-2">
+                <i class="fas fa-folder-plus text-primary"></i>
+                <span>Thêm dự án mới</span>
+            </div>
+            <div class="card-body">
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger py-2">
+                        <i class="fas fa-exclamation-circle me-2"></i>@ViewBag.Error
+                    </div>
+                }
+
+                <form method="post" asp-action="Create">
+                    <div class="mb-3">
+                        <label class="form-label">Workspace <span class="text-danger">*</span></label>
+                        <select name="maWorkspace" class="form-select" required>
+                            <option value="">-- Chọn Workspace --</option>
+                            @if (workspaces != null)
+                            {
+                                foreach (var ws in workspaces)
+                                {
+                                    <option value="@ws.MaWorkspace">@ws.TenWorkspace</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tên dự án <span class="text-danger">*</span></label>
+                        <input type="text" name="tenDuAn" class="form-control" placeholder="Nhập tên dự án" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả</label>
+                        <textarea name="moTa" class="form-control" rows="3" placeholder="Mô tả mục tiêu dự án"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ngày bắt đầu</label>
+                            <input type="date" name="ngayBatDau" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Ngày kết thúc dự kiến</label>
+                            <input type="date" name="ngayKetThuc" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-custom">
+                            <i class="fas fa-save me-2"></i>Lưu dự án
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-outline-custom">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

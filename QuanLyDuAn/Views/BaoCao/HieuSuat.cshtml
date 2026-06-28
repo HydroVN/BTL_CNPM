@@ -1,0 +1,167 @@
+@using QuanLyDuAn.Controllers
+@{
+    ViewData["Title"] = "Hiệu suất Thành viên";
+    var projects = ViewBag.Projects as List<QuanLyDuAn.Models.Duan>;
+    var selectedProject = ViewBag.SelectedProject as string;
+    var memberStats = ViewBag.MemberStats as List<BaoCaoController.MemberPerformanceDto>;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+        <h4 class="fw-bold mb-1">Báo cáo Hiệu suất</h4>
+        <p class="text-muted mb-0" style="font-size:.88rem;">Theo dõi năng suất làm việc của thành viên</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("ExportExcel", new { maDuAn = selectedProject })" class="btn btn-outline-custom">
+            <i class="fas fa-file-excel me-2 text-success"></i>Xuất Excel
+        </a>
+        <a href="@Url.Action("ExportPdf", new { maDuAn = selectedProject })" class="btn btn-outline-custom" target="_blank">
+            <i class="fas fa-file-pdf me-2 text-danger"></i>Xuất PDF
+        </a>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body py-3">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Lọc theo dự án</label>
+                <select name="maDuAn" class="form-select" onchange="this.form.submit()">
+                    <option value="">-- Tất cả dự án --</option>
+                    @if (projects != null)
+                    {
+                        foreach (var p in projects)
+                        {
+                            <option value="@p.MaDuAn" selected="@(selectedProject == p.MaDuAn)">@p.TenDuAn</option>
+                        }
+                    }
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Member Stats Table -->
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header"><i class="fas fa-table me-2"></i>Thống kê năng suất nhân sự</div>
+            <div class="table-responsive">
+                <table class="table-custom">
+                    <thead>
+                        <tr>
+                            <th>Họ và tên</th>
+                            <th>Dự án</th>
+                            <th class="text-center">Tổng số Task</th>
+                            <th class="text-center">Đang làm</th>
+                            <th class="text-center">Đã hoàn thành</th>
+                            <th class="text-center">Trễ hạn</th>
+                            <th class="text-center">Tỷ lệ hoàn thành</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (memberStats == null || memberStats.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">Chưa có số liệu thống kê</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var stat in memberStats)
+                            {
+                                var pct = stat.TotalTasks > 0 ? (int)(stat.DoneTasks * 100.0 / stat.TotalTasks) : 0;
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar" style="width:30px;height:30px;font-size:.75rem;">
+                                                @stat.HoTen[0].ToString().ToUpper()
+                                            </div>
+                                            <span class="fw-semibold">@stat.HoTen</span>
+                                        </div>
+                                    </td>
+                                    <td>@stat.DuAn</td>
+                                    <td class="text-center fw-bold text-primary">@stat.TotalTasks</td>
+                                    <td class="text-center text-warning">@stat.InProgressTasks</td>
+                                    <td class="text-center text-success">@stat.DoneTasks</td>
+                                    <td class="text-center text-danger">@stat.OverdueTasks</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2 justify-content-center">
+                                            <div class="progress-custom flex-grow-1" style="max-width:80px;">
+                                                <div class="progress-bar" style="width:@(pct)%"></div>
+                                            </div>
+                                            <small class="text-muted fw-bold">@(pct)%</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Productivity Chart -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="fas fa-chart-bar me-2"></i>So sánh hiệu suất</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="productivityChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        var memberNames = [];
+        var taskCompleted = [];
+        var taskTotal = [];
+        
+        @if (memberStats != null)
+        {
+            foreach (var stat in memberStats)
+            {
+                <text>
+                    memberNames.push('@Html.Raw(stat.HoTen) (@Html.Raw(stat.DuAn.Length > 10 ? stat.DuAn.Substring(0, 10) + "..." : stat.DuAn))');
+                    taskCompleted.push(@stat.DoneTasks);
+                    taskTotal.push(@stat.TotalTasks);
+                </text>
+            }
+        }
+
+        if (memberNames.length > 0) {
+            new Chart(document.getElementById('productivityChart'), {
+                type: 'bar',
+                data: {
+                    labels: memberNames,
+                    datasets: [
+                        {
+                            label: 'Đã hoàn thành',
+                            data: taskCompleted,
+                            backgroundColor: '#22c55e'
+                        },
+                        {
+                            label: 'Tổng số việc',
+                            data: taskTotal,
+                            backgroundColor: '#e2e8f0'
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+    </script>
+}

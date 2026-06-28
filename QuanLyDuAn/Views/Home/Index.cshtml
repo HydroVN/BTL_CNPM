@@ -1,0 +1,96 @@
+@{
+    ViewData["Title"] = "Nền tảng quản lý dự án & công việc hàng đầu";
+    Layout = "_LayoutGuest";
+}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 fade-in-up">
+                <h1>Đơn giản hóa quy trình quản lý dự án với <span>ProjectFlow</span></h1>
+                <p>Nền tảng quản trị toàn diện dành cho doanh nghiệp và đội nhóm. Phân công nhiệm vụ, theo dõi tiến độ thời gian thực và cộng tác hiệu quả.</p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="@Url.Action("Register", "Account")" class="btn btn-primary-custom px-4 py-3 fs-6">
+                        Bắt đầu miễn phí <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                    <a href="@Url.Action("Pricing", "Home")" class="btn btn-outline-light px-4 py-3 fs-6">
+                        Xem bảng giá
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5" style="background:#0f172a; color:#fff;">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold mb-2">Các giải pháp quản lý nổi bật</h2>
+            <p class="text-muted" style="max-width: 500px; margin: 0 auto;">Mọi công cụ bạn cần để tối ưu hiệu suất làm việc nhóm</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:rgba(99,102,241,0.1); color:var(--primary);">
+                        <i class="fas fa-columns"></i>
+                    </div>
+                    <h5>Bảng Kanban Trực Quan</h5>
+                    <p>Kéo thả thẻ nhiệm vụ trong thời gian thực để cập nhật trạng thái công việc nhanh chóng.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:rgba(14,165,233,0.1); color:var(--secondary);">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h5>Quản Lý Thành Viên</h5>
+                    <p>Mời thành viên qua liên kết token an toàn và phân chia vai trò rõ ràng trong dự án.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon" style="background:rgba(34,197,94,0.1); color:var(--success);">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h5>Báo Cáo Hiệu Suất</h5>
+                    <p>Thống kê tiến độ tự động bằng biểu đồ tròn và Burndown chart theo dõi KPI.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Collaboration Section -->
+<section class="py-5" style="background:#090d16; color:#fff;">
+    <div class="container py-4">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <h2 class="fw-bold mb-3">Tương tác thời gian thực qua SignalR</h2>
+                <p class="text-muted mb-4">Mọi thay đổi trên bảng Kanban hay các bình luận mới đều được cập nhật ngay lập tức cho toàn bộ các thành viên khác đang online mà không cần tải lại trang.</p>
+                <ul class="list-unstyled">
+                    <li class="mb-3 d-flex align-items-start gap-2">
+                        <i class="fas fa-check-circle text-success mt-1"></i>
+                        <span>Kéo thả nhiệm vụ tức thời</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start gap-2">
+                        <i class="fas fa-check-circle text-success mt-1"></i>
+                        <span>Bình luận và đính kèm tệp trực tiếp trong Task</span>
+                    </li>
+                    <li class="mb-3 d-flex align-items-start gap-2">
+                        <i class="fas fa-check-circle text-success mt-1"></i>
+                        <span>Gửi thông báo hệ thống tự động khi nhận việc</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="p-4" style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius: 16px;">
+                    <i class="fas fa-comments fa-5x text-primary-light mb-4"></i>
+                    <h4>Thảo luận trực tiếp</h4>
+                    <p class="text-muted" style="font-size:0.9rem;">Thành viên trao đổi thông tin, giải quyết vướng mắc nhanh chóng ngay trên từng công việc cụ thể.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

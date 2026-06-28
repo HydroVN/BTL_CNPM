@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ProjectFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body style="background:#0f172a;">
+    <!-- Public Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark landing-nav">
+        <div class="container">
+            <a class="nav-brand" href="/">
+                <i class="fas fa-project-diagram"></i>
+                <span>ProjectFlow</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#landingNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="landingNavbar">
+                <ul class="navbar-nav align-items-center gap-3">
+                    <li class="nav-item">
+                        <a class="nav-link text-light-50" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light-50" href="@Url.Action("Pricing", "Home")">Bảng giá</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-light btn-sm px-3" href="@Url.Action("Login", "Account")">Đăng nhập</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-primary-custom btn-sm px-3" href="@Url.Action("Register", "Account")">Dùng thử miễn phí</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div style="min-height: 100vh;">
+        @RenderBody()
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-5" style="background:#090d16; border-top: 1px solid rgba(255,255,255,0.05); color: #64748b;">
+        <div class="container text-center">
+            <p class="mb-2">&copy; 2026 ProjectFlow - Nền tảng quản lý dự án & công việc.</p>
+            <p class="mb-0" style="font-size: 0.85rem;">Phát triển trên nền tảng .NET 10 MVC.</p>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
