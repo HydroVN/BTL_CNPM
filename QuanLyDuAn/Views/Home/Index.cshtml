@@ -62,13 +62,70 @@
     </div>
 </section>
 
+<!-- Team Showcase Section -->
+<link rel="stylesheet" href="~/css/team-showcase.css" asp-append-version="true" />
+
+<section class="team-showcase-section py-5">
+    <div class="container py-4">
+        <div class="text-center mb-5 fade-in-up">
+            <h2 class="team-showcase-heading mb-2">Đội ngũ phát triển</h2>
+            <p class="text-white-50" style="max-width: 500px; margin: 0 auto;">Giới thiệu các nhân sự kiến tạo nên giải pháp ProjectFlow</p>
+        </div>
+
+        <div class="team-card mx-auto shadow-lg fade-in-up">
+            <!-- Top Header -->
+            <div class="d-flex align-items-center mb-4 pb-2" style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <div class="group-icon me-3 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-project-diagram text-warning"></i>
+                </div>
+                <h5 class="mb-0 fw-bold tracking-wide" style="color: #cbd5e1; font-size: 0.95rem;">PROJECTFLOW TEAM</h5>
+            </div>
+
+            <!-- Profile Area -->
+            <div class="row align-items-center py-4" id="member-profile-area">
+                <!-- Left: Big Avatar -->
+                <div class="col-md-4 text-center mb-4 mb-md-0">
+                    <div class="big-avatar-wrapper mx-auto">
+                        <img id="active-big-avatar" src="/img/DODUYVAN.jpg" alt="Avatar" />
+                    </div>
+                </div>
+
+                <!-- Middle: Details -->
+                <div class="col-md-6 text-center text-md-start ps-md-4 member-details-col">
+                    <div class="team-member-badge mb-3 d-inline-block">TEAM MEMBER</div>
+                    <h1 class="active-member-name fw-bold mb-2" id="active-member-name">Đỗ Duy Văn</h1>
+                    <h4 class="active-member-role mb-3" id="active-member-role">Project Lead</h4>
+                    <p class="active-member-desc text-white-50" style="font-size: 0.95rem; line-height: 1.6;" id="active-member-desc">
+                        Chịu trách nhiệm định hướng kiến trúc hệ thống, điều phối nhân sự và quản lý tiến độ chung của toàn bộ dự án.
+                    </p>
+                </div>
+
+                <!-- Right: Small Avatar Bar (Vertical on Desktop, Horizontal on Mobile) -->
+                <div class="col-md-2 d-flex flex-row flex-md-column justify-content-center align-items-center gap-3 mt-4 mt-md-0" id="small-avatars-bar">
+                    <div class="small-avatar-item active" data-index="0" data-name="Đỗ Duy Văn" data-role="Project Lead" data-avatar="/img/avatar_lead_fun.png" data-desc="Chịu trách nhiệm định hướng kiến trúc hệ thống, điều phối nhân sự và quản lý tiến độ chung của toàn bộ dự án." data-color="#facc15" data-glow="rgba(250, 204, 21, 0.2)">
+                        <img src="/img/DODUYVAN.png" alt="Đỗ Duy Văn" />
+                    </div>
+                    <div class="small-avatar-item" data-index="1" data-name="Nguyễn Thế Phương Nam" data-role="Senior Developer" data-avatar="/img/avatar_dev_fun.png" data-desc="Trưởng nhóm lập trình, chịu trách nhiệm xây dựng các module lõi, tối ưu hiệu năng cơ sở dữ liệu và tích hợp Realtime SignalR." data-color="#c0c0c0" data-glow="rgba(192, 192, 192, 0.2)">
+                        <img src="/img/NGUYENTHEPHUONGNAM.png" alt="Nguyễn Thế Phương Nam" />
+                    </div>
+                    <div class="small-avatar-item" data-index="2" data-name="Lê Duy An" data-role="UI/UX Designer" data-avatar="/img/avatar_designer_fun.png" data-desc="Phụ trách thiết kế trải nghiệm người dùng, xây dựng giao diện responsive đẹp mắt, hiện đại và tối ưu hóa SEO." data-color="#cd7f32" data-glow="rgba(205, 127, 50, 0.2)">
+                        <img src="/img/LEDUYAN.jpg" alt="Lê Duy An" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="~/js/team-showcase.js" asp-append-version="true"></script>
+
 <!-- Collaboration Section -->
 <section class="py-5" style="background:#090d16; color:#fff;">
     <div class="container py-4">
         <div class="row align-items-center g-5">
             <div class="col-lg-6">
                 <h2 class="fw-bold mb-3">Tương tác thời gian thực qua SignalR</h2>
-                <p class="text-white-50 mb-4">Mọi thay đổi trên bảng Kanban hay các bình luận mới đều được cập nhật ngay lập tức cho toàn bộ các thành viên khác đang online mà không cần tải lại trang.</p>
+                <p class="mb-4" style="color: #cbd5e1; font-size: 1.02rem; line-height: 1.7;">Mọi thay đổi trên bảng Kanban hay các bình luận mới đều được cập nhật ngay lập tức cho toàn bộ các thành viên khác đang online mà không cần tải lại trang.</p>
                 <ul class="list-unstyled">
                     <li class="mb-3 d-flex align-items-start gap-2">
                         <i class="fas fa-check-circle text-success mt-1"></i>
