@@ -85,7 +85,7 @@ namespace QuanLyDuAn.Controllers
                 DuAn = m.MaDuAnNavigation.TenDuAn,
                 TotalTasks = m.Congviecs.Count,
                 DoneTasks = m.Congviecs.Count(c => c.TrangThai == "Done"),
-                OverdueTasks = m.Congviecs.Count(c => c.Deadline.HasValue && c.Deadline < DateTime.Now && c.TrangThai != "Done"),
+                OverdueTasks = m.Congviecs.Count(c => c.Deadline.HasValue && c.Deadline < QuanLyDuAn.Helpers.VnDateTime.Now && c.TrangThai != "Done"),
                 InProgressTasks = m.Congviecs.Count(c => c.TrangThai == "InProgress")
             }).ToList();
 
@@ -151,7 +151,7 @@ namespace QuanLyDuAn.Controllers
             stream.Position = 0;
 
             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                $"BaoCao_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
+                $"BaoCao_{QuanLyDuAn.Helpers.VnDateTime.Now:yyyyMMdd_HHmmss}.xlsx");
         }
 
         // ========== UC#18: XUẤT PDF (HTML-based) ==========

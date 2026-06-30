@@ -126,7 +126,7 @@ namespace QuanLyDuAn.Controllers
                 SoDienThoai = soDienThoai,
                 VaiTro = "Member",
                 TrangThai = "KichHoat",
-                NgayTao = DateTime.Now
+                NgayTao = QuanLyDuAn.Helpers.VnDateTime.Now
             };
             newUser.MatKhau = _hasher.HashPassword(newUser, matKhau);
 
@@ -138,7 +138,7 @@ namespace QuanLyDuAn.Controllers
             {
                 var invite = await _context.Invitelinks
                     .Include(i => i.MaWorkspaceNavigation)
-                    .FirstOrDefaultAsync(i => i.Token == token && i.NgayHetHan > DateTime.Now);
+                    .FirstOrDefaultAsync(i => i.Token == token && i.NgayHetHan > QuanLyDuAn.Helpers.VnDateTime.Now);
 
                 if (invite != null)
                 {
@@ -158,7 +158,7 @@ namespace QuanLyDuAn.Controllers
                             MaDuAn = proj.MaDuAn,
                             MaTaiKhoan = newUser.MaTaiKhoan,
                             VaiTroDuAn = invite.VaiTroMacDinh,
-                            NgayThamGia = DateTime.Now
+                            NgayThamGia = QuanLyDuAn.Helpers.VnDateTime.Now
                         };
                         _context.Thanhviens.Add(tv);
                     }

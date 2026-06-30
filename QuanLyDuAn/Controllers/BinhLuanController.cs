@@ -64,7 +64,7 @@ namespace QuanLyDuAn.Controllers
                 MaCongViec = request.MaCongViec,
                 MaTaiKhoan = maTk,
                 NoiDung = request.NoiDung,
-                ThoiGian = DateTime.Now
+                ThoiGian = QuanLyDuAn.Helpers.VnDateTime.Now
             };
 
             _context.Binhluans.Add(bl);

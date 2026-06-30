@@ -191,14 +191,15 @@
                         var taskBadge = cv.TrangThai switch { "ToDo" => "badge-todo", "InProgress" => "badge-inprogress", "Review" => "badge-review", "Done" => "badge-done", _ => "badge-todo" };
                         <div class="d-flex justify-content-between align-items-center py-2 px-2 task-item-clickable" 
                              style="border-bottom:1px solid var(--gray-100); cursor: pointer; transition: background-color 0.15s ease; border-radius: 6px;"
+                             data-id="@cv.MaCongViec"
                              onclick="openTaskDetail('@cv.MaCongViec')">
                             <div>
                                 <div class="fw-semibold text-primary" style="font-size:.85rem;">@cv.TenCongViec</div>
-                                <small class="text-muted">
+                                <small class="text-muted task-assignee-name">
                                     @(cv.MaThanhVienNavigation?.MaTaiKhoanNavigation?.HoTen ?? "Chưa phân công")
                                 </small>
                             </div>
-                            <span class="badge-status @taskBadge">@cv.TrangThai</span>
+                            <span class="badge-status @taskBadge task-status-badge">@cv.TrangThai</span>
                         </div>
                     }
                 }
@@ -282,6 +283,7 @@
         var maDuAn = '@Model.MaDuAn';
         var isManager = @(isAuthorizedToManage ? "true" : "false");
         var myMemberId = '@Model.Thanhviens.FirstOrDefault(tv => tv.MaTaiKhoan == currentUserId)?.MaThanhVien';
+        var members = @Html.Raw(Json.Serialize(Model.Thanhviens.Select(t => new { id = t.MaThanhVien, name = t.MaTaiKhoanNavigation.HoTen })));
 
         // SignalR connection
         var connection = new signalR.HubConnectionBuilder().withUrl('/projectHub').build();
@@ -379,8 +381,19 @@
                     }
                     html += '<div class="col-sm-6"><p class="mb-0 d-flex align-items-center"><strong>Trạng thái:</strong> ' + statusHtml + '</p></div>';
                     
-                    var assigneeHtml = '<span>' + (data.assignee || 'Chưa phân công') + '</span>';
-                    html += '<div class="col-sm-6"><p class="mb-0"><strong>Người phụ trách:</strong> ' + assigneeHtml + '</p></div>';
+                    var assigneeHtml = '';
+                    if (isManager) {
+                        assigneeHtml = '<select class="form-select d-inline-block w-auto border-2 py-1 px-3 ms-2" style="font-size: 0.88rem; border-radius: 6px;" id="taskAssigneeSelect" onchange="updateTaskAssignee(\'' + maCongViec + '\', this.value)">';
+                        assigneeHtml += '<option value="">-- Chưa phân công --</option>';
+                        members.forEach(function(m) {
+                            var selected = (data.assigneeId === m.id) ? 'selected' : '';
+                            assigneeHtml += '<option value="' + m.id + '" ' + selected + '>' + m.name + '</option>';
+                        });
+                        assigneeHtml += '</select>';
+                    } else {
+                        assigneeHtml = '<span class="ms-2">' + (data.assignee || 'Chưa phân công') + '</span>';
+                    }
+                    html += '<div class="col-sm-6"><p class="mb-0 d-flex align-items-center"><strong>Người phụ trách:</strong> ' + assigneeHtml + '</p></div>';
                     html += '</div>';
                     
                     $('#taskModalBody').html(html);
@@ -427,6 +440,32 @@
                     });
                 } else {
                     Swal.fire('Lỗi', data.message || 'Cập nhật tiến trình thất bại.', 'error');
+                }
+            });
+        }
+
+        function updateTaskAssignee(maCongViec, maThanhVien) {
+            var urlParams = new URLSearchParams();
+            urlParams.append('maCongViec', maCongViec);
+            urlParams.append('maThanhVien', maThanhVien);
+
+            fetch('/CongViec/Assign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: urlParams
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Thành công',
+                        text: 'Cập nhật người phụ trách thành công!',
+                        icon: 'success',
+                        timer: 1200,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Lỗi', data.message || 'Cập nhật người phụ trách thất bại.', 'error');
                 }
             });
         }

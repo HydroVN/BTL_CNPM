@@ -162,7 +162,12 @@
                             } else {
                                 evt.from.appendChild(evt.item);
                             }
-                            alert(data.message || 'Thao tác không thành công.');
+                            Swal.fire({
+                                title: 'Thông báo',
+                                text: data.message || 'Thao tác không thành công.',
+                                icon: 'warning',
+                                confirmButtonColor: '#6366f1'
+                            });
                         }
                     }).catch(function (err) {
                         evt.from.appendChild(evt.item);
@@ -268,7 +273,12 @@
                         }
                     }
                 } else {
-                    alert(data.message || 'Phân công thất bại.');
+                    Swal.fire({
+                        title: 'Thông báo',
+                        text: data.message || 'Phân công thất bại.',
+                        icon: 'warning',
+                        confirmButtonColor: '#6366f1'
+                    });
                 }
             });
         }

@@ -98,7 +98,7 @@ namespace QuanLyDuAn.Controllers
                 Deadline = deadline,
                 MucDoUuTien = mucDoUuTien ?? "TrungBinh",
                 TrangThai = "ToDo",
-                NgayTao = DateTime.Now
+                NgayTao = QuanLyDuAn.Helpers.VnDateTime.Now
             };
 
             _context.Congviecs.Add(congViec);
@@ -142,7 +142,7 @@ namespace QuanLyDuAn.Controllers
                         MaTaiKhoan = tv.MaTaiKhoan,
                         NoiDung = $"Bạn được phân công công việc \"{tenCongViec}\" trong dự án \"{duAn.TenDuAn}\"",
                         TrangThai = "ChuaDoc",
-                        ThoiGian = DateTime.Now
+                        ThoiGian = QuanLyDuAn.Helpers.VnDateTime.Now
                     });
                     await _context.SaveChangesAsync();
                 }
@@ -189,7 +189,7 @@ namespace QuanLyDuAn.Controllers
                         MaTaiKhoan = tv.MaTaiKhoan,
                         NoiDung = $"Bạn được phân công công việc \"{cv.TenCongViec}\"",
                         TrangThai = "ChuaDoc",
-                        ThoiGian = DateTime.Now
+                        ThoiGian = QuanLyDuAn.Helpers.VnDateTime.Now
                     });
                     await _context.SaveChangesAsync();
                 }

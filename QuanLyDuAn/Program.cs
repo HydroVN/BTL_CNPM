@@ -79,7 +79,7 @@ try
                 SoDienThoai = "0123456789",
                 VaiTro = "Admin",
                 TrangThai = "KichHoat",
-                NgayTao = DateTime.Now
+                NgayTao = QuanLyDuAn.Helpers.VnDateTime.Now
             };
             adminUser.MatKhau = hasher.HashPassword(adminUser, "admin123");
             context.Taikhoans.Add(adminUser);

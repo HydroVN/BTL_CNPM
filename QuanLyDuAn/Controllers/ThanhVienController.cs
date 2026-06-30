@@ -68,7 +68,7 @@ namespace QuanLyDuAn.Controllers
                 MaWorkspace = maWorkspace,
                 Token = token,
                 VaiTroMacDinh = vaiTroMacDinh,
-                NgayHetHan = DateTime.Now.AddDays(7)
+                NgayHetHan = QuanLyDuAn.Helpers.VnDateTime.Now.AddDays(7)
             };
 
             _context.Invitelinks.Add(invite);
@@ -95,7 +95,7 @@ namespace QuanLyDuAn.Controllers
                     .ThenInclude(w => w.MaTaiKhoanNavigation)
                 .FirstOrDefaultAsync(i => i.Token == token);
 
-            if (invite == null || invite.NgayHetHan < DateTime.Now)
+            if (invite == null || invite.NgayHetHan < QuanLyDuAn.Helpers.VnDateTime.Now)
             {
                 return RedirectToAction("ExpiredLink");
             }
@@ -125,7 +125,7 @@ namespace QuanLyDuAn.Controllers
                 .Include(i => i.MaWorkspaceNavigation)
                 .FirstOrDefaultAsync(i => i.Token == token);
 
-            if (invite == null || invite.NgayHetHan < DateTime.Now)
+            if (invite == null || invite.NgayHetHan < QuanLyDuAn.Helpers.VnDateTime.Now)
             {
                 return RedirectToAction("ExpiredLink");
             }
@@ -150,7 +150,7 @@ namespace QuanLyDuAn.Controllers
                         MaDuAn = proj.MaDuAn,
                         MaTaiKhoan = maTaiKhoan,
                         VaiTroDuAn = invite.VaiTroMacDinh,
-                        NgayThamGia = DateTime.Now
+                        NgayThamGia = QuanLyDuAn.Helpers.VnDateTime.Now
                     };
                     _context.Thanhviens.Add(tv);
                     addedCount++;
@@ -279,7 +279,7 @@ namespace QuanLyDuAn.Controllers
                 MaTaiKhoan = user.MaTaiKhoan,
                 NoiDung = content,
                 TrangThai = "ChuaDoc",
-                ThoiGian = DateTime.Now
+                ThoiGian = QuanLyDuAn.Helpers.VnDateTime.Now
             };
 
             _context.Thongbaos.Add(thongBao);
@@ -321,7 +321,7 @@ namespace QuanLyDuAn.Controllers
                         MaDuAn = maDuAn,
                         MaTaiKhoan = maTk,
                         VaiTroDuAn = vaiTroDuAn,
-                        NgayThamGia = DateTime.Now
+                        NgayThamGia = QuanLyDuAn.Helpers.VnDateTime.Now
                     };
                     _context.Thanhviens.Add(tv);
                 }

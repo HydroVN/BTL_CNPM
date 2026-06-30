@@ -72,7 +72,7 @@ namespace QuanLyDuAn.Controllers
                 MaTaiKhoan = maTk,
                 TenWorkspace = tenWorkspace,
                 MoTa = moTa,
-                NgayTao = DateTime.Now
+                NgayTao = QuanLyDuAn.Helpers.VnDateTime.Now
             };
 
             _context.Workspaces.Add(ws);
