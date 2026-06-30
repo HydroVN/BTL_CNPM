@@ -22,9 +22,11 @@ namespace QuanLyDuAn.Controllers
         public async Task<IActionResult> Index()
         {
             var maTk = HttpContext.Session.GetString("MaTaiKhoan")!;
-            var workspaces = await _context.Workspaces
-                .Where(w => w.MaTaiKhoan == maTk)
-                .ToListAsync();
+            var vaiTro = HttpContext.Session.GetString("VaiTro");
+
+            var workspaces = vaiTro == "Admin"
+                ? await _context.Workspaces.ToListAsync()
+                : await _context.Workspaces.Where(w => w.MaTaiKhoan == maTk).ToListAsync();
 
             ViewBag.Workspaces = workspaces;
 
@@ -367,11 +369,12 @@ namespace QuanLyDuAn.Controllers
             var vaiTro = HttpContext.Session.GetString("VaiTro");
             if (vaiTro != "Admin")
             {
-                return RedirectToAction("Index", "Workspace");
+                return RedirectToAction("AccessDenied", "Account");
             }
 
             var users = await _context.Taikhoans
                 .Include(t => t.MaGoiNavigation)
+                .Where(t => t.VaiTro != "Admin")
                 .OrderByDescending(t => t.NgayTao)
                 .ToListAsync();
 
@@ -385,7 +388,7 @@ namespace QuanLyDuAn.Controllers
             var vaiTro = HttpContext.Session.GetString("VaiTro");
             if (vaiTro != "Admin")
             {
-                return RedirectToAction("Index", "Workspace");
+                return RedirectToAction("AccessDenied", "Account");
             }
 
             if (string.IsNullOrWhiteSpace(newPassword))
@@ -401,10 +404,82 @@ namespace QuanLyDuAn.Controllers
                 return RedirectToAction("AdminUsers");
             }
 
+            if (user.VaiTro == "Admin")
+            {
+                TempData["Error"] = "Không được phép thay đổi mật khẩu của quản trị viên khác.";
+                return RedirectToAction("AdminUsers");
+            }
+
             user.MatKhau = _hasher.HashPassword(user, newPassword);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"Đã đặt lại mật khẩu cho tài khoản {user.HoTen} ({user.Email}) thành công!";
+            return RedirectToAction("AdminUsers");
+        }
+
+        [AuthFilter]
+        [HttpPost]
+        public async Task<IActionResult> AdminDeleteUser(string maTaiKhoan)
+        {
+            var vaiTro = HttpContext.Session.GetString("VaiTro");
+            if (vaiTro != "Admin")
+            {
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
+            var user = await _context.Taikhoans.FindAsync(maTaiKhoan);
+            if (user == null)
+            {
+                TempData["Error"] = "Tài khoản không tồn tại.";
+                return RedirectToAction("AdminUsers");
+            }
+
+            if (user.VaiTro == "Admin")
+            {
+                TempData["Error"] = "Không được phép xóa tài khoản quản trị viên khác.";
+                return RedirectToAction("AdminUsers");
+            }
+
+            // Remove comments of this user
+            var comments = await _context.Binhluans.Where(b => b.MaTaiKhoan == maTaiKhoan).ToListAsync();
+            _context.Binhluans.RemoveRange(comments);
+
+            // Remove member records in projects
+            var memberRecords = await _context.Thanhviens.Where(tv => tv.MaTaiKhoan == maTaiKhoan).ToListAsync();
+            _context.Thanhviens.RemoveRange(memberRecords);
+
+            // Remove notifications
+            var notifications = await _context.Thongbaos.Where(n => n.MaTaiKhoan == maTaiKhoan).ToListAsync();
+            _context.Thongbaos.RemoveRange(notifications);
+
+            // Remove workspaces owned by this user
+            var workspaces = await _context.Workspaces
+                .Include(w => w.Duans).ThenInclude(d => d.Congviecs).ThenInclude(c => c.Binhluans)
+                .Include(w => w.Duans).ThenInclude(d => d.Congviecs).ThenInclude(c => c.Tepdinhkems)
+                .Include(w => w.Duans).ThenInclude(d => d.Thanhviens)
+                .Where(w => w.MaTaiKhoan == maTaiKhoan)
+                .ToListAsync();
+
+            foreach (var ws in workspaces)
+            {
+                foreach (var duAn in ws.Duans)
+                {
+                    foreach (var cv in duAn.Congviecs)
+                    {
+                        _context.Binhluans.RemoveRange(cv.Binhluans);
+                        _context.Tepdinhkems.RemoveRange(cv.Tepdinhkems);
+                    }
+                    _context.Congviecs.RemoveRange(duAn.Congviecs);
+                    _context.Thanhviens.RemoveRange(duAn.Thanhviens);
+                }
+                _context.Duans.RemoveRange(ws.Duans);
+                _context.Workspaces.Remove(ws);
+            }
+
+            _context.Taikhoans.Remove(user);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Đã xóa tài khoản {user.HoTen} ({user.Email}) thành công!";
             return RedirectToAction("AdminUsers");
         }
 
@@ -476,11 +551,48 @@ namespace QuanLyDuAn.Controllers
                 return RedirectToAction("Details", "DuAn", new { id = maDuAn });
             }
 
+            // Unassign tasks assigned to this member in this project to prevent foreign key errors
+            var tasks = await _context.Congviecs
+                .Where(c => c.MaDuAn == maDuAn && c.MaThanhVien == maThanhVien)
+                .ToListAsync();
+            foreach (var task in tasks)
+            {
+                task.MaThanhVien = null;
+            }
+
             _context.Thanhviens.Remove(tv);
             await _context.SaveChangesAsync();
 
             TempData["Success"] = "Đã xóa thành viên khỏi dự án thành công.";
             return RedirectToAction("Details", "DuAn", new { id = maDuAn });
+        }
+
+        [AuthFilter]
+        [HttpPost]
+        public async Task<IActionResult> DeleteNotification(string notificationId)
+        {
+            var thongBao = await _context.Thongbaos.FindAsync(notificationId);
+            if (thongBao == null)
+            {
+                return Json(new { success = false, message = "Thông báo không tồn tại." });
+            }
+
+            var maTk = HttpContext.Session.GetString("MaTaiKhoan")!;
+            if (thongBao.MaTaiKhoan != maTk)
+            {
+                return Forbid();
+            }
+
+            // If it is a pending invite, block deletion
+            if (thongBao.NoiDung.StartsWith("PROJECT_INVITE|"))
+            {
+                return Json(new { success = false, message = "Không thể xóa lời mời tham gia dự án đang chờ xử lý." });
+            }
+
+            _context.Thongbaos.Remove(thongBao);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
         }
     }
 }

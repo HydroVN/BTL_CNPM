@@ -1,4 +1,4 @@
-﻿namespace QuanLyDuAn.Tests;
+namespace QuanLyDuAn.Tests;
 
 public class UnitTest1
 {

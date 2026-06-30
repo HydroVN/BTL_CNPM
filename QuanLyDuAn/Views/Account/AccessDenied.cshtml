@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Từ chối quyền truy cập";
+}
+
+<div class="d-flex align-items-center justify-content-center" style="min-height: 70vh;">
+    <div class="text-center p-5 shadow-lg bg-white rounded-lg border-0 fade-in-up" style="max-width: 500px; border-radius: var(--radius) !important;">
+        <div class="mb-4">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle text-danger" style="width: 80px; height: 80px; background-color: rgba(239, 68, 68, 0.1);">
+                <i class="fas fa-ban fa-3x"></i>
+            </span>
+        </div>
+        <h3 class="fw-bold text-dark mb-2">Truy cập bị từ chối</h3>
+        <p class="text-muted mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+            Xin lỗi, bạn không có quyền truy cập vào trang này. Khu vực này chỉ dành riêng cho Quản trị viên hệ thống (Admin).
+        </p>
+        <div class="d-grid gap-2">
+            <a href="@Url.Action("Index", "Workspace")" class="btn btn-primary-custom py-2">
+                <i class="fas fa-home me-2"></i>Quay lại trang chủ
+            </a>
+        </div>
+    </div>
+</div>

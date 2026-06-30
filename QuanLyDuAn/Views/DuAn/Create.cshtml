@@ -43,11 +43,11 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Ngày bắt đầu</label>
-                            <input type="date" name="ngayBatDau" class="form-control" />
+                            <input type="text" name="ngayBatDau" class="form-control datepicker" placeholder="dd/mm/yyyy" />
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Ngày kết thúc dự kiến</label>
-                            <input type="date" name="ngayKetThuc" class="form-control" />
+                            <input type="text" name="ngayKetThuc" class="form-control datepicker" placeholder="dd/mm/yyyy" />
                         </div>
                     </div>
                     <div class="d-flex gap-2">
@@ -61,3 +61,60 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vn.js"></script>
+    <script>
+        $(document).ready(function() {
+            flatpickr(".datepicker", {
+                locale: "vn",
+                altInput: true,
+                altFormat: "d/m/Y",
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                onReady: function(selectedDates, dateStr, instance) {
+                    var altInput = instance.altInput;
+                    if (altInput) {
+                        altInput.placeholder = "dd/mm/yyyy";
+                        altInput.addEventListener('input', function(e) {
+                            var cursorPosition = this.selectionStart;
+                            var originalLength = this.value.length;
+                            
+                            var value = this.value.replace(/\D/g, ''); // Keep only digits
+                            var formatted = '';
+                            
+                            if (value.length > 0) {
+                                var day = value.substring(0, 2);
+                                formatted += day;
+                                if (value.length > 2) {
+                                    formatted += '/';
+                                    var month = value.substring(2, 4);
+                                    formatted += month;
+                                    if (value.length > 4) {
+                                        formatted += '/';
+                                        var year = value.substring(4, 8);
+                                        formatted += year;
+                                    }
+                                }
+                            }
+                            
+                            this.value = formatted;
+                            
+                            var newLength = formatted.length;
+                            var diff = newLength - originalLength;
+                            this.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
+                        });
+                        
+                        altInput.addEventListener('blur', function() {
+                            if (this.value) {
+                                instance.setDate(this.value, true, "d/m/Y");
+                            }
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+}

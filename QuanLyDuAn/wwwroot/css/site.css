@@ -144,6 +144,7 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    transition: margin-left .3s ease;
 }
 
 /* ===== Topbar ===== */
@@ -811,3 +812,61 @@ body {
 .btn-action.btn-edit:hover { color: var(--primary); border-color: var(--primary); }
 .btn-action.btn-delete:hover { color: var(--danger); border-color: var(--danger); }
 .btn-action.btn-view:hover { color: var(--info); border-color: var(--info); }
+
+/* ===== Custom SweetAlert2 Styling ===== */
+.swal2-popup {
+    font-family: 'Inter', sans-serif !important;
+    border-radius: var(--radius) !important;
+    box-shadow: var(--shadow-lg) !important;
+    border: none !important;
+}
+.swal2-title {
+    color: var(--dark) !important;
+    font-weight: 700 !important;
+    font-size: 1.3rem !important;
+}
+.swal2-html-container {
+    color: var(--gray-600) !important;
+    font-size: 0.9rem !important;
+}
+.swal2-confirm.swal2-styled {
+    background-color: var(--primary) !important;
+    color: #fff !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 500 !important;
+    padding: 8px 24px !important;
+    box-shadow: none !important;
+}
+.swal2-confirm.swal2-styled:hover {
+    background-color: var(--primary-dark) !important;
+}
+.swal2-cancel.swal2-styled {
+    background-color: var(--gray-400) !important;
+    color: #fff !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 500 !important;
+    padding: 8px 24px !important;
+    box-shadow: none !important;
+}
+.swal2-cancel.swal2-styled:hover {
+    background-color: var(--gray-500) !important;
+}
+
+/* ===== Desktop Sidebar Collapse & Toggle Styling ===== */
+@media (min-width: 992px) {
+    body.sidebar-collapsed .sidebar {
+        transform: translateX(-100%);
+    }
+    body.sidebar-collapsed .main-content {
+        margin-left: 0;
+    }
+}
+
+.topbar .sidebar-toggle {
+    color: var(--gray-600) !important;
+}
+
+.topbar .sidebar-toggle:hover {
+    background-color: var(--gray-100) !important;
+    color: var(--dark) !important;
+}

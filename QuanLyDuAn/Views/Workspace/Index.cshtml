@@ -44,9 +44,9 @@ else
                             @if (ws.MaTaiKhoan == currentUserId || Context.Session.GetString("VaiTro") == "Admin")
                             {
                                 <div onclick="event.stopPropagation();">
-                                    <form method="post" asp-controller="Workspace" asp-action="Delete" onsubmit="return confirm('Bạn có chắc chắn muốn xóa Workspace \'@ws.TenWorkspace\'? Tất cả dự án, công việc và thành viên liên quan sẽ bị xóa vĩnh viễn và không thể phục hồi!');" style="display:inline;">
+                                    <form method="post" asp-controller="Workspace" asp-action="Delete" style="display:inline;">
                                         <input type="hidden" name="id" value="@ws.MaWorkspace" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger border-0 p-1" title="Xóa Workspace" style="line-height: 1;">
+                                        <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1 btn-delete-workspace" data-name="@ws.TenWorkspace" title="Xóa Workspace" style="line-height: 1;">
                                             <i class="fas fa-trash-alt" style="font-size: 0.95rem;"></i>
                                         </button>
                                     </form>
@@ -65,4 +65,30 @@ else
             </div>
         }
     </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.btn-delete-workspace').on('click', function(e) {
+                var form = $(this).closest('form');
+                var name = $(this).data('name');
+                
+                Swal.fire({
+                    title: 'Xác nhận xóa Workspace?',
+                    text: "Tất cả dự án, công việc và thành viên liên quan đến Workspace '" + name + "' sẽ bị xóa vĩnh viễn và không thể phục hồi!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    </script>
 }

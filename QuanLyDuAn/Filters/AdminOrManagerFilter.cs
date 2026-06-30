@@ -19,7 +19,7 @@ namespace QuanLyDuAn.Filters
 
             if (vaiTro != "Admin" && vaiTro != "Manager")
             {
-                context.Result = new RedirectToActionResult("Index", "Workspace", null);
+                context.Result = new RedirectToActionResult("AccessDenied", "Account", null);
                 return;
             }
 

@@ -1,0 +1,189 @@
+@{
+    ViewData["Title"] = "Dashboard Admin";
+    var totalUsers = ViewBag.TotalUsers as int? ?? 0;
+    var proCount = ViewBag.ProCount as int? ?? 0;
+    var entCount = ViewBag.EntCount as int? ?? 0;
+    var regMonths = ViewBag.RegMonths as List<QuanLyDuAn.Controllers.MonthlyRegistrationDto> ?? new();
+    var peakTimes = ViewBag.PeakTimes as List<QuanLyDuAn.Controllers.PeakActivityDto> ?? new();
+
+    string GetDayNameVi(DayOfWeek day)
+    {
+        return day switch
+        {
+            DayOfWeek.Monday => "Thứ Hai",
+            DayOfWeek.Tuesday => "Thứ Ba",
+            DayOfWeek.Wednesday => "Thứ Tư",
+            DayOfWeek.Thursday => "Thứ Năm",
+            DayOfWeek.Friday => "Thứ Sáu",
+            DayOfWeek.Saturday => "Thứ Bảy",
+            DayOfWeek.Sunday => "Chủ Nhật",
+            _ => day.ToString()
+        };
+    }
+}
+
+<div class="mb-4">
+    <h4 class="fw-bold mb-1"><i class="fas fa-chart-line text-primary me-2"></i>Dashboard Hệ Thống</h4>
+    <p class="text-muted mb-0" style="font-size: 0.88rem;">Thống kê tổng quan hoạt động và dữ liệu đăng ký dịch vụ của hệ thống</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #6366f1, #818cf8); color: #fff; border: none; border-radius: var(--radius);">
+            <div class="d-flex align-items-center justify-content-between p-3">
+                <div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Tổng Tài Khoản Thường</div>
+                    <div style="font-size: 2.2rem; font-weight: 700; line-height: 1.2;">@totalUsers</div>
+                </div>
+                <div style="font-size: 2.5rem; opacity: 0.3;">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="px-3 pb-2 text-white-50" style="font-size: 0.78rem;">
+                <i class="fas fa-info-circle me-1"></i>Không bao gồm tài khoản quản trị
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #0284c7, #0ea5e9); color: #fff; border: none; border-radius: var(--radius);">
+            <div class="d-flex align-items-center justify-content-between p-3">
+                <div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Số Gói PRO Active</div>
+                    <div style="font-size: 2.2rem; font-weight: 700; line-height: 1.2;">@proCount</div>
+                </div>
+                <div style="font-size: 2.5rem; opacity: 0.3;">
+                    <i class="fas fa-gem"></i>
+                </div>
+            </div>
+            <div class="px-3 pb-2 text-white-50" style="font-size: 0.78rem;">
+                <i class="fas fa-check-circle me-1"></i>Hạn mức 50 dự án / 5 workspaces
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #059669, #10b981); color: #fff; border: none; border-radius: var(--radius);">
+            <div class="d-flex align-items-center justify-content-between p-3">
+                <div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Số Gói Enterprise Active</div>
+                    <div style="font-size: 2.2rem; font-weight: 700; line-height: 1.2;">@entCount</div>
+                </div>
+                <div style="font-size: 2.5rem; opacity: 0.3;">
+                    <i class="fas fa-crown"></i>
+                </div>
+            </div>
+            <div class="px-3 pb-2 text-white-50" style="font-size: 0.78rem;">
+                <i class="fas fa-star me-1"></i>Hạn mức không giới hạn
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Monthly Registrations Analysis -->
+    <div class="col-lg-6">
+        <div class="card h-100 shadow-sm border-0" style="border-radius: var(--radius);">
+            <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
+                <h5 class="fw-bold mb-0 text-dark" style="font-size: 1rem;"><i class="fas fa-calendar-alt text-primary me-2"></i>Đăng ký mới theo tháng</h5>
+                <span class="badge bg-primary-light text-primary">Phân tích xu hướng</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4 py-3">Tháng / Năm</th>
+                                <th class="py-3">Số lượng tài khoản</th>
+                                <th class="pe-4 py-3 text-end">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (regMonths.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted py-4">Chưa có đăng ký mới nào</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                int idx = 0;
+                                foreach (var m in regMonths)
+                                {
+                                    <tr>
+                                        <td class="ps-4 fw-semibold">Tháng @m.Month / @m.Year</td>
+                                        <td><span class="fs-6 fw-bold">@m.Count</span> tài khoản</td>
+                                        <td class="pe-4 text-end">
+                                            @if (idx == 0)
+                                            {
+                                                <span class="badge bg-success-light text-success"><i class="fas fa-fire me-1"></i>Cao nhất</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-muted">Bình thường</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                    idx++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Hour per Day Analysis -->
+    <div class="col-lg-6">
+        <div class="card h-100 shadow-sm border-0" style="border-radius: var(--radius);">
+            <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
+                <h5 class="fw-bold mb-0 text-dark" style="font-size: 1rem;"><i class="fas fa-clock text-warning me-2"></i>Múi giờ hoạt động nhiều nhất mỗi ngày</h5>
+                <span class="badge bg-warning-light text-warning" style="background-color: rgba(245, 158, 11, 0.1);">Giờ cao điểm</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="p-3 bg-light-custom text-muted mb-2 border-bottom" style="font-size: 0.8rem; background-color: var(--gray-50);">
+                    <i class="fas fa-magic me-1"></i> <strong>Cách tính:</strong> Tự động phân tích khung giờ gửi bình luận và tạo công việc trên hệ thống theo thời gian thực (Zero database changes).
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4 py-3">Ngày trong tuần</th>
+                                <th class="py-3">Khung giờ cao điểm nhất</th>
+                                <th class="pe-4 py-3 text-end">Tương tác recorded</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in peakTimes)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-semibold">@GetDayNameVi(p.DayOfWeek)</td>
+                                    <td>
+                                        @if (p.Count > 0)
+                                        {
+                                            <span class="fw-bold text-primary">@p.PeakHourStart:00 - @(p.PeakHourStart + 1):00</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Không có hoạt động</span>
+                                        }
+                                    </td>
+                                    <td class="pe-4 text-end font-monospace">
+                                        @if (p.Count > 0)
+                                        {
+                                            <span class="badge bg-primary text-white" style="border-radius: 20px; font-size: 0.78rem;">@p.Count hoạt động</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-light text-muted" style="border-radius: 20px; font-size: 0.78rem;">0</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

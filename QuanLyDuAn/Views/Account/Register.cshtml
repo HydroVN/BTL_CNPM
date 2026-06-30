@@ -56,7 +56,7 @@
 
         <p class="text-center mt-4 mb-0" style="font-size:.9rem;color:var(--gray-500);">
             Đã có tài khoản?
-            <a href="@Url.Action("Login")" style="color:var(--primary);font-weight:600;text-decoration:none;">Đăng nhập</a>
+            <a href="@Url.Action("Login", new { token = ViewBag.Token })" style="color:var(--primary);font-weight:600;text-decoration:none;">Đăng nhập</a>
         </p>
     </div>
 </div>

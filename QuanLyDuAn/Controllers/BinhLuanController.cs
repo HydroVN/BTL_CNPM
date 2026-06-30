@@ -74,7 +74,8 @@ namespace QuanLyDuAn.Controllers
             {
                 success = true,
                 avatar = hoTen.Length > 0 ? hoTen[0].ToString().ToUpper() : "U",
-                hoTen = hoTen
+                hoTen = hoTen,
+                thoiGian = bl.ThoiGian.ToString("dd/MM HH:mm")
             });
         }
 

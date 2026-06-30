@@ -65,14 +65,29 @@
                             </td>
                             <td style="font-size:.85rem;">@user.NgayTao.ToString("dd/MM/yyyy")</td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-outline-primary btn-reset-pw" 
-                                        data-id="@user.MaTaiKhoan" 
-                                        data-name="@user.HoTen" 
-                                        data-email="@user.Email" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#resetPasswordModal">
-                                    <i class="fas fa-key me-1"></i>Đổi mật khẩu
-                                </button>
+                                <div class="d-flex justify-content-end gap-2">
+                                    @if (user.VaiTro != "Admin")
+                                    {
+                                        <button class="btn btn-sm btn-outline-primary btn-reset-pw" 
+                                                data-id="@user.MaTaiKhoan" 
+                                                data-name="@user.HoTen" 
+                                                data-email="@user.Email" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#resetPasswordModal">
+                                            <i class="fas fa-key me-1"></i>Đổi mật khẩu
+                                        </button>
+                                        <form method="post" asp-action="AdminDeleteUser" style="display:inline;">
+                                            <input type="hidden" name="maTaiKhoan" value="@user.MaTaiKhoan" />
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-delete-user" data-name="@user.HoTen" data-email="@user.Email">
+                                                <i class="fas fa-trash-alt me-1"></i>Xóa
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Không có thao tác</span>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
@@ -124,6 +139,27 @@
 
                 $('#resetUserId').val(userId);
                 $('#resetUserDetail').text(userName + ' (' + userEmail + ')');
+            });
+
+            $('.btn-delete-user').on('click', function(e) {
+                var form = $(this).closest('form');
+                var name = $(this).data('name');
+                var email = $(this).data('email');
+                
+                Swal.fire({
+                    title: 'Xác nhận xóa tài khoản?',
+                    text: "Hành động này sẽ xóa vĩnh viễn tài khoản '" + name + " (" + email + ")' cùng toàn bộ các workspace, dự án, công việc liên quan của họ! Thao tác này KHÔNG thể phục hồi!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
             });
         });
     </script>

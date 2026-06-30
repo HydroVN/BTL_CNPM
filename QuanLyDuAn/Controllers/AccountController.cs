@@ -19,19 +19,27 @@ namespace QuanLyDuAn.Controllers
 
         // ========== UC#01: ĐĂNG NHẬP ==========
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string? token)
         {
+            ViewBag.Token = token;
             if (!string.IsNullOrEmpty(HttpContext.Session.GetString("MaTaiKhoan")))
+            {
+                if (!string.IsNullOrEmpty(token))
+                {
+                    return RedirectToAction("Join", "ThanhVien", new { token = token });
+                }
                 return RedirectToAction("Index", "Workspace");
+            }
             return View();
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string email, string matKhau)
+        public async Task<IActionResult> Login(string email, string matKhau, string? token = null)
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(matKhau))
             {
                 ViewBag.Error = "Tên đăng nhập và mật khẩu không để trống";
+                ViewBag.Token = token;
                 return View();
             }
 
@@ -39,6 +47,7 @@ namespace QuanLyDuAn.Controllers
             if (user == null)
             {
                 ViewBag.Error = "Tên đăng nhập hoặc mật khẩu không đúng";
+                ViewBag.Token = token;
                 return View();
             }
 
@@ -46,6 +55,7 @@ namespace QuanLyDuAn.Controllers
             if (result == PasswordVerificationResult.Failed)
             {
                 ViewBag.Error = "Tên đăng nhập hoặc mật khẩu không đúng";
+                ViewBag.Token = token;
                 return View();
             }
 
@@ -55,6 +65,11 @@ namespace QuanLyDuAn.Controllers
             HttpContext.Session.SetString("Email", user.Email);
             HttpContext.Session.SetString("VaiTro", user.VaiTro);
 
+            if (!string.IsNullOrEmpty(token))
+            {
+                return RedirectToAction("Join", "ThanhVien", new { token = token });
+            }
+
             return RedirectToAction("Index", "Workspace");
         }
 
@@ -62,6 +77,14 @@ namespace QuanLyDuAn.Controllers
         [HttpGet]
         public IActionResult Register(string? token, string? plan)
         {
+            if (!string.IsNullOrEmpty(HttpContext.Session.GetString("MaTaiKhoan")))
+            {
+                if (!string.IsNullOrEmpty(token))
+                {
+                    return RedirectToAction("Join", "ThanhVien", new { token = token });
+                }
+                return RedirectToAction("Index", "Workspace");
+            }
             ViewBag.Token = token;
             ViewBag.Plan = plan;
             return View();
@@ -267,6 +290,12 @@ namespace QuanLyDuAn.Controllers
 
             TempData["Success"] = $"Đăng ký thành công gói {package.TenGoi}!";
             return RedirectToAction("Profile");
+        }
+
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 }

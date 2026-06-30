@@ -151,10 +151,10 @@
                                     <button class="btn btn-xs btn-outline-custom p-1" onclick="openEditRoleModal('@tv.MaThanhVien', '@tv.MaTaiKhoanNavigation.HoTen', '@tv.VaiTroDuAn')" title="Sửa vai trò" style="line-height:1; padding: 2px 5px !important;">
                                         <i class="fas fa-edit" style="font-size: 0.75rem;"></i>
                                     </button>
-                                    <form method="post" asp-controller="ThanhVien" asp-action="RemoveMember" style="display:inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa thành viên @tv.MaTaiKhoanNavigation.HoTen khỏi dự án này?');">
+                                    <form method="post" asp-controller="ThanhVien" asp-action="RemoveMember" style="display:inline;">
                                         <input type="hidden" name="maThanhVien" value="@tv.MaThanhVien" />
                                         <input type="hidden" name="maDuAn" value="@Model.MaDuAn" />
-                                        <button type="submit" class="btn btn-xs btn-outline-danger p-1" title="Xóa thành viên" style="line-height:1; padding: 2px 5px !important;">
+                                        <button type="button" class="btn btn-xs btn-outline-danger p-1 btn-remove-member" data-name="@tv.MaTaiKhoanNavigation.HoTen" title="Xóa thành viên" style="line-height:1; padding: 2px 5px !important;">
                                             <i class="fas fa-trash-alt" style="font-size: 0.75rem;"></i>
                                         </button>
                                     </form>
@@ -189,9 +189,11 @@
                     foreach (var cv in Model.Congviecs.OrderBy(c => c.TrangThai))
                     {
                         var taskBadge = cv.TrangThai switch { "ToDo" => "badge-todo", "InProgress" => "badge-inprogress", "Review" => "badge-review", "Done" => "badge-done", _ => "badge-todo" };
-                        <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom:1px solid var(--gray-100);">
+                        <div class="d-flex justify-content-between align-items-center py-2 px-2 task-item-clickable" 
+                             style="border-bottom:1px solid var(--gray-100); cursor: pointer; transition: background-color 0.15s ease; border-radius: 6px;"
+                             onclick="openTaskDetail('@cv.MaCongViec')">
                             <div>
-                                <div class="fw-semibold" style="font-size:.85rem;">@cv.TenCongViec</div>
+                                <div class="fw-semibold text-primary" style="font-size:.85rem;">@cv.TenCongViec</div>
                                 <small class="text-muted">
                                     @(cv.MaThanhVienNavigation?.MaTaiKhoanNavigation?.HoTen ?? "Chưa phân công")
                                 </small>
@@ -239,7 +241,35 @@
     </div>
 </div>
 
+<!-- Task Detail Modal -->
+<div class="modal fade" id="taskDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-light border-bottom-0">
+                <h5 class="modal-title fw-bold text-dark" id="taskModalTitle"><i class="fas fa-tasks me-2 text-primary"></i>Chi tiết công việc</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="taskModalBody" style="font-size: 0.92rem; line-height: 1.6;"></div>
+                <hr class="my-4" />
+                <h6 class="fw-bold mb-3 text-dark"><i class="fas fa-comments me-2 text-primary"></i>Bình luận</h6>
+                <div class="comment-list px-2" id="commentList" style="max-height: 250px; overflow-y: auto;"></div>
+                <div class="mt-3">
+                    <div class="d-flex gap-2">
+                        <input type="hidden" id="commentTaskId" />
+                        <input type="text" id="commentInput" class="form-control" placeholder="Viết bình luận..." />
+                        <button class="btn btn-primary-custom" id="btnSendComment" disabled onclick="sendComment()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script>
         function openEditRoleModal(id, name, role) {
             $('#editMemberId').val(id);
@@ -247,6 +277,196 @@
             $('#editMemberRole').val(role);
             var myModal = new bootstrap.Modal(document.getElementById('editRoleModal'));
             myModal.show();
+        }
+
+        var maDuAn = '@Model.MaDuAn';
+        var isManager = @(isAuthorizedToManage ? "true" : "false");
+        var myMemberId = '@Model.Thanhviens.FirstOrDefault(tv => tv.MaTaiKhoan == currentUserId)?.MaThanhVien';
+
+        // SignalR connection
+        var connection = new signalR.HubConnectionBuilder().withUrl('/projectHub').build();
+        connection.start().then(function () {
+            connection.invoke('JoinProject', maDuAn);
+        });
+
+        connection.on('OnNewComment', function (maCongViec, hoTen, noiDung, thoiGian) {
+            var currentTaskId = $('#commentTaskId').val();
+            if (currentTaskId === maCongViec) {
+                var firstChild = $('#commentList').children().first();
+                if (firstChild.is('p') && firstChild.hasClass('text-muted')) {
+                    $('#commentList').empty();
+                }
+
+                var html = '<div class="comment-item"><div class="comment-avatar">' + hoTen[0].toUpperCase() + '</div>';
+                html += '<div class="comment-body"><span class="comment-author">' + hoTen + '</span>';
+                html += '<span class="comment-time">' + thoiGian + '</span>';
+                html += '<div class="comment-text">' + noiDung + '</div></div></div>';
+                $('#commentList').append(html);
+
+                var commentListEl = document.getElementById('commentList');
+                if (commentListEl) {
+                    commentListEl.scrollTop = commentListEl.scrollHeight;
+                }
+            }
+        });
+
+        // Hover effect for task items
+        $(document).ready(function() {
+            $('.task-item-clickable').hover(
+                function() { $(this).css('background-color', 'var(--gray-100)'); },
+                function() { $(this).css('background-color', 'transparent'); }
+            );
+
+            // Comment input enable/disable
+            $('#commentInput').on('input', function () {
+                $('#btnSendComment').prop('disabled', $(this).val().trim() === '');
+            });
+
+            // Member removal confirmation using SweetAlert2
+            $('.btn-remove-member').on('click', function(e) {
+                var form = $(this).closest('form');
+                var name = $(this).data('name');
+                
+                Swal.fire({
+                    title: 'Xác nhận xóa thành viên?',
+                    text: "Bạn có chắc chắn muốn xóa thành viên '" + name + "' khỏi dự án này? (Các công việc đang giao cho người này sẽ được giải phóng)",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Đồng ý xóa',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+
+        function openTaskDetail(maCongViec) {
+            $('#commentTaskId').val(maCongViec);
+            fetch('/BinhLuan/GetTaskDetail?maCongViec=' + maCongViec)
+                .then(r => r.json())
+                .then(data => {
+                    $('#taskModalTitle').html('<i class="fas fa-tasks me-2 text-primary"></i>' + data.tenCongViec);
+                    
+                    var html = '<div class="row g-3">';
+                    html += '<div class="col-12"><p class="mb-1 text-muted fw-semibold">Mô tả công việc</p><div class="p-3 bg-light rounded" style="min-height:60px; white-space: pre-wrap;">' + (data.moTa || 'Không có mô tả') + '</div></div>';
+                    html += '<div class="col-sm-6"><p class="mb-1"><strong>Hạn hoàn thành:</strong> <span class="text-secondary">' + (data.deadline || 'Chưa đặt') + '</span></p></div>';
+                    html += '<div class="col-sm-6"><p class="mb-1"><strong>Mức độ ưu tiên:</strong> <span class="badge bg-secondary">' + data.mucDoUuTien + '</span></p></div>';
+                    
+                    // Task status selector
+                    var isAssignedToMe = (data.assigneeId === myMemberId);
+                    var canEditStatus = isManager || isAssignedToMe;
+                    
+                    var statusHtml = '';
+                    if (canEditStatus) {
+                        statusHtml = '<select class="form-select d-inline-block w-auto border-2 py-1 px-3 ms-2" style="font-size: 0.88rem; border-radius: 6px;" id="taskStatusSelect" onchange="updateTaskStatus(\'' + maCongViec + '\', this.value)">';
+                        var statuses = [
+                            { val: 'ToDo', text: 'To Do' },
+                            { val: 'InProgress', text: 'In Progress' },
+                            { val: 'Review', text: 'Review' },
+                            { val: 'Done', text: 'Done' }
+                        ];
+                        statuses.forEach(function(s) {
+                            var selected = (data.trangThai === s.val) ? 'selected' : '';
+                            statusHtml += '<option value="' + s.val + '" ' + selected + '>' + s.text + '</option>';
+                        });
+                        statusHtml += '</select>';
+                    } else {
+                        statusHtml = '<span class="badge bg-info ms-2">' + data.trangThai + '</span>';
+                    }
+                    html += '<div class="col-sm-6"><p class="mb-0 d-flex align-items-center"><strong>Trạng thái:</strong> ' + statusHtml + '</p></div>';
+                    
+                    var assigneeHtml = '<span>' + (data.assignee || 'Chưa phân công') + '</span>';
+                    html += '<div class="col-sm-6"><p class="mb-0"><strong>Người phụ trách:</strong> ' + assigneeHtml + '</p></div>';
+                    html += '</div>';
+                    
+                    $('#taskModalBody').html(html);
+
+                    var commentHtml = '';
+                    if (data.comments && data.comments.length > 0) {
+                        data.comments.forEach(function (c) {
+                            commentHtml += '<div class="comment-item"><div class="comment-avatar">' + c.avatar + '</div>';
+                            commentHtml += '<div class="comment-body"><span class="comment-author">' + c.hoTen + '</span>';
+                            commentHtml += '<span class="comment-time">' + c.thoiGian + '</span>';
+                            commentHtml += '<div class="comment-text">' + c.noiDung + '</div></div></div>';
+                        });
+                    } else {
+                        commentHtml = '<p class="text-muted text-center py-3" style="font-size:.85rem;">Chưa có bình luận</p>';
+                    }
+                    $('#commentList').html(commentHtml);
+
+                    // Scroll to bottom of comments
+                    var commentListEl = document.getElementById('commentList');
+                    if (commentListEl) {
+                        commentListEl.scrollTop = commentListEl.scrollHeight;
+                    }
+
+                    var myModal = new bootstrap.Modal(document.getElementById('taskDetailModal'));
+                    myModal.show();
+                });
+        }
+
+        function updateTaskStatus(maCongViec, newStatus) {
+            fetch('/CongViec/UpdateStatus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maCongViec: maCongViec, trangThai: newStatus })
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Thành công',
+                        text: 'Cập nhật tiến trình công việc thành công!',
+                        icon: 'success',
+                        timer: 1200,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Lỗi', data.message || 'Cập nhật tiến trình thất bại.', 'error');
+                }
+            });
+        }
+
+        function sendComment() {
+            var maCongViec = $('#commentTaskId').val();
+            var noiDung = $('#commentInput').val().trim();
+            if (!noiDung) return;
+
+            fetch('/BinhLuan/Create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maCongViec: maCongViec, noiDung: noiDung })
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    var firstChild = $('#commentList').children().first();
+                    if (firstChild.is('p') && firstChild.hasClass('text-muted')) {
+                        $('#commentList').empty();
+                    }
+
+                    var html = '<div class="comment-item"><div class="comment-avatar">' + data.avatar + '</div>';
+                    html += '<div class="comment-body"><span class="comment-author">' + data.hoTen + '</span>';
+                    html += '<span class="comment-time">' + (data.thoiGian || 'Vừa xong') + '</span>';
+                    html += '<div class="comment-text">' + noiDung + '</div></div></div>';
+                    $('#commentList').append(html);
+                    
+                    var commentListEl = document.getElementById('commentList');
+                    if (commentListEl) {
+                        commentListEl.scrollTop = commentListEl.scrollHeight;
+                    }
+
+                    $('#commentInput').val('');
+                    $('#btnSendComment').prop('disabled', true);
+
+                    // Broadcast via SignalR
+                    if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                        connection.invoke('NewComment', maDuAn, maCongViec, data.hoTen, noiDung, data.thoiGian || 'Vừa xong');
+                    }
+                }
+            });
         }
     </script>
 }

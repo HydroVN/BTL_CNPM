@@ -25,8 +25,8 @@
         <form method="post" asp-controller="CongViec" asp-action="Delete"
               asp-route-id="@Model.MaCongViec" asp-route-maDuAn="@Model.MaDuAn"
               onclick="event.stopPropagation();"
-              onsubmit="return confirm('Bạn có chắc chắn muốn xóa công việc này?');">
-            <button type="submit" class="btn-action btn-delete" style="width:24px;height:24px;font-size:.7rem;" title="Xóa">
+              class="delete-task-form">
+            <button type="button" class="btn-action btn-delete btn-delete-task" data-name="@Model.TenCongViec" style="width:24px;height:24px;font-size:.7rem;" title="Xóa">
                 <i class="fas fa-times"></i>
             </button>
         </form>

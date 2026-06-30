@@ -19,6 +19,7 @@
         }
 
         <form method="post" asp-action="Login">
+            <input type="hidden" name="token" value="@ViewBag.Token" />
             <div class="mb-3">
                 <label class="form-label">Email</label>
                 <div class="input-group">
@@ -40,7 +41,7 @@
 
         <p class="text-center mt-4 mb-0" style="font-size:.9rem;color:var(--gray-500);">
             Chưa có tài khoản?
-            <a href="@Url.Action("Register")" style="color:var(--primary);font-weight:600;text-decoration:none;">Đăng ký ngay</a>
+            <a href="@Url.Action("Register", new { token = ViewBag.Token })" style="color:var(--primary);font-weight:600;text-decoration:none;">Đăng ký ngay</a>
         </p>
     </div>
 </div>

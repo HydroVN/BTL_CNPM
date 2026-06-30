@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
@@ -57,27 +58,28 @@
                         </a>
                     </div>
 
-                    @if (vaiTro == "Admin" || vaiTro == "Manager")
-                    {
-                        <div class="nav-section">
-                            <span class="nav-section-title">QUẢN LÝ</span>
-                            <a href="@Url.Action("Index", "ThanhVien")" class="nav-link-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ThanhVien" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
-                                <i class="fas fa-users"></i>
-                                <span>Thành viên</span>
+                    <div class="nav-section">
+                        <span class="nav-section-title">QUẢN LÝ</span>
+                        <a href="@Url.Action("Index", "ThanhVien")" class="nav-link-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ThanhVien" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                            <i class="fas fa-users"></i>
+                            <span>Thành viên</span>
+                        </a>
+                        <a href="@Url.Action("TienDo", "BaoCao")" class="nav-link-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "BaoCao" ? "active" : "")">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Báo cáo</span>
+                        </a>
+                        @if (vaiTro == "Admin")
+                        {
+                            <a href="@Url.Action("AdminUsers", "ThanhVien")" class="nav-link-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ThanhVien" && ViewContext.RouteData.Values["action"]?.ToString() == "AdminUsers" ? "active" : "")">
+                                <i class="fas fa-user-shield text-danger"></i>
+                                <span>Quản trị tài khoản</span>
                             </a>
-                            <a href="@Url.Action("TienDo", "BaoCao")" class="nav-link-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "BaoCao" ? "active" : "")">
-                                <i class="fas fa-chart-bar"></i>
-                                <span>Báo cáo</span>
+                            <a href="@Url.Action("Dashboard", "Admin")" class="nav-link-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
+                                <i class="fas fa-tachometer-alt text-warning"></i>
+                                <span>Dashboard Admin</span>
                             </a>
-                            @if (vaiTro == "Admin")
-                            {
-                                <a href="@Url.Action("AdminUsers", "ThanhVien")" class="nav-link-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ThanhVien" && ViewContext.RouteData.Values["action"]?.ToString() == "AdminUsers" ? "active" : "")">
-                                    <i class="fas fa-user-shield text-danger"></i>
-                                    <span>Quản trị tài khoản</span>
-                                </a>
-                            }
-                        </div>
-                    }
+                        }
+                    </div>
 
                     <div class="nav-section">
                         <span class="nav-section-title">TÀI KHOẢN</span>
@@ -98,7 +100,7 @@
                 <!-- Topbar -->
                 <header class="topbar">
                     <div class="topbar-left">
-                        <button class="sidebar-toggle d-lg-none" onclick="toggleSidebar()">
+                        <button class="sidebar-toggle" onclick="toggleSidebar()">
                             <i class="fas fa-bars"></i>
                         </button>
                         <h5 class="page-title mb-0">@ViewData["Title"]</h5>
@@ -138,12 +140,20 @@
                                             var isUnread = notif.TrangThai == "ChuaDoc";
                                             var isInvite = notif.NoiDung.StartsWith("PROJECT_INVITE|");
                                             
-                                            <div class="list-group-item p-3 @(isUnread ? "bg-light" : "")" style="font-size: 0.85rem; border-bottom: 1px solid var(--gray-100);">
-                                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                                    <span class="small text-muted">@notif.ThoiGian.ToString("dd/MM/yyyy HH:mm")</span>
-                                                    @if (isUnread)
+                                            <div class="list-group-item p-3 @(isUnread ? "bg-light" : "")" id="notif-@notif.MaThongBao" style="font-size: 0.85rem; border-bottom: 1px solid var(--gray-100); transition: opacity 0.3s ease;">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <div>
+                                                        <span class="small text-muted">@notif.ThoiGian.ToString("dd/MM/yyyy HH:mm")</span>
+                                                        @if (isUnread)
+                                                        {
+                                                            <span class="badge bg-success ms-1" style="font-size: 0.6rem; padding: 0.2em 0.4em;">Mới</span>
+                                                        }
+                                                    </div>
+                                                    @if (!isInvite)
                                                     {
-                                                        <span class="badge bg-success" style="font-size: 0.6rem; padding: 0.2em 0.4em;">Mới</span>
+                                                        <button class="btn btn-sm text-danger p-0 border-0 bg-transparent" onclick="deleteNotification(event, '@notif.MaThongBao')" title="Xóa thông báo" style="line-height: 1;">
+                                                            <i class="fas fa-times" style="font-size: 0.85rem;"></i>
+                                                        </button>
                                                     }
                                                 </div>
                                                 
@@ -233,6 +243,43 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function deleteNotification(event, id) {
+            event.stopPropagation();
+            event.preventDefault();
+            
+            fetch('/ThanhVien/DeleteNotification?notificationId=' + id, {
+                method: 'POST'
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    var el = document.getElementById('notif-' + id);
+                    if (el) {
+                        el.style.opacity = '0';
+                        setTimeout(function() {
+                            el.remove();
+                            // Update unread count badge dynamically
+                            var badge = document.querySelector('#notificationDropdown .badge');
+                            if (badge) {
+                                var count = parseInt(badge.textContent.trim()) || 0;
+                                if (count > 1) {
+                                    badge.textContent = count - 1;
+                                } else {
+                                    badge.remove();
+                                }
+                            }
+                        }, 300);
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Thông báo',
+                        text: data.message || 'Xóa thông báo thất bại.',
+                        icon: 'warning',
+                        confirmButtonColor: '#6366f1'
+                    });
+                }
+            });
+        }
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

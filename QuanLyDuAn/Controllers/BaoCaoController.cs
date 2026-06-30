@@ -6,7 +6,7 @@ using QuanLyDuAn.Filters;
 
 namespace QuanLyDuAn.Controllers
 {
-    [AdminOrManagerFilter]
+    [AuthFilter]
     public class BaoCaoController : Controller
     {
         private readonly BtlCnpmContext _context;
@@ -20,9 +20,11 @@ namespace QuanLyDuAn.Controllers
         public async Task<IActionResult> TienDo(string? maDuAn)
         {
             var maTk = HttpContext.Session.GetString("MaTaiKhoan")!;
-            var wsIds = await _context.Workspaces
-                .Where(w => w.MaTaiKhoan == maTk)
-                .Select(w => w.MaWorkspace).ToListAsync();
+            var vaiTro = HttpContext.Session.GetString("VaiTro");
+
+            var wsIds = vaiTro == "Admin"
+                ? await _context.Workspaces.Select(w => w.MaWorkspace).ToListAsync()
+                : await _context.Workspaces.Where(w => w.MaTaiKhoan == maTk).Select(w => w.MaWorkspace).ToListAsync();
 
             var projects = await _context.Duans
                 .Include(d => d.Congviecs)
@@ -53,9 +55,11 @@ namespace QuanLyDuAn.Controllers
         public async Task<IActionResult> HieuSuat(string? maDuAn)
         {
             var maTk = HttpContext.Session.GetString("MaTaiKhoan")!;
-            var wsIds = await _context.Workspaces
-                .Where(w => w.MaTaiKhoan == maTk)
-                .Select(w => w.MaWorkspace).ToListAsync();
+            var vaiTro = HttpContext.Session.GetString("VaiTro");
+
+            var wsIds = vaiTro == "Admin"
+                ? await _context.Workspaces.Select(w => w.MaWorkspace).ToListAsync()
+                : await _context.Workspaces.Where(w => w.MaTaiKhoan == maTk).Select(w => w.MaWorkspace).ToListAsync();
 
             var projects = await _context.Duans
                 .Where(d => wsIds.Contains(d.MaWorkspace))
@@ -94,9 +98,11 @@ namespace QuanLyDuAn.Controllers
         public async Task<IActionResult> ExportExcel(string? maDuAn)
         {
             var maTk = HttpContext.Session.GetString("MaTaiKhoan")!;
-            var wsIds = await _context.Workspaces
-                .Where(w => w.MaTaiKhoan == maTk)
-                .Select(w => w.MaWorkspace).ToListAsync();
+            var vaiTro = HttpContext.Session.GetString("VaiTro");
+
+            var wsIds = vaiTro == "Admin"
+                ? await _context.Workspaces.Select(w => w.MaWorkspace).ToListAsync()
+                : await _context.Workspaces.Where(w => w.MaTaiKhoan == maTk).Select(w => w.MaWorkspace).ToListAsync();
 
             var query = _context.Congviecs
                 .Include(c => c.MaDuAnNavigation)

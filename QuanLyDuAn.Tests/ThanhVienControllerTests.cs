@@ -481,11 +481,11 @@ namespace QuanLyDuAn.Tests
             // Assert
             var viewResult = Assert.IsType<ViewResult>(result);
             var model = Assert.IsType<List<Taikhoan>>(viewResult.Model);
-            Assert.Equal(4, model.Count);
+            Assert.Equal(3, model.Count); // Admin is filtered out, leaving USER1, USER2, USER3
         }
 
         [Fact]
-        public async Task AdminUsers_AsUser_RedirectsToWorkspace()
+        public async Task AdminUsers_AsUser_RedirectsToAccessDenied()
         {
             // Arrange
             using var context = TestHelper.GetInMemoryDbContext();
@@ -500,8 +500,8 @@ namespace QuanLyDuAn.Tests
 
             // Assert
             var redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal("Index", redirectResult.ActionName);
-            Assert.Equal("Workspace", redirectResult.ControllerName);
+            Assert.Equal("AccessDenied", redirectResult.ActionName);
+            Assert.Equal("Account", redirectResult.ControllerName);
         }
 
         [Fact]
@@ -993,7 +993,52 @@ namespace QuanLyDuAn.Tests
         }
 
         [Fact]
-        public async Task AdminResetPassword_NonAdmin_RedirectsToWorkspace()
+        public async Task RemoveMember_Success_UnassignsTasksAndDeletesMember()
+        {
+            // Arrange
+            using var context = TestHelper.GetInMemoryDbContext();
+            await SeedDataAsync(context);
+            
+            // Seed a task assigned to USER2 in PROJ1
+            var task = new Congviec
+            {
+                MaCongViec = "TASK2",
+                MaDuAn = "PROJ1",
+                TenCongViec = "Task for USER2",
+                MaThanhVien = "MB2",
+                MucDoUuTien = "TrungBinh",
+                TrangThai = "ToDo"
+            };
+            context.Congviecs.Add(task);
+            await context.SaveChangesAsync();
+
+            var controller = new ThanhVienController(context);
+            var sessionMock = TestHelper.CreateMockSession();
+            sessionMock.SetSessionString("MaTaiKhoan", "USER1"); // Owner of WS1/PROJ1
+            sessionMock.SetSessionString("VaiTro", "User");
+            controller.ControllerContext = TestHelper.CreateControllerContext(sessionMock.Object);
+            controller.SetupTempData();
+
+            // Act
+            var result = await controller.RemoveMember("MB2", "PROJ1");
+
+            // Assert
+            var redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("Details", redirectResult.ActionName);
+            Assert.Equal("DuAn", redirectResult.ControllerName);
+            Assert.Equal("Đã xóa thành viên khỏi dự án thành công.", controller.TempData["Success"]);
+
+            // Verify task was unassigned
+            var updatedTask = await context.Congviecs.FindAsync("TASK2");
+            Assert.Null(updatedTask!.MaThanhVien);
+
+            // Verify member was deleted
+            var deletedMember = await context.Thanhviens.FindAsync("MB2");
+            Assert.Null(deletedMember);
+        }
+
+        [Fact]
+        public async Task AdminResetPassword_NonAdmin_RedirectsToAccessDenied()
         {
             // Arrange
             using var context = TestHelper.GetInMemoryDbContext();
@@ -1007,8 +1052,46 @@ namespace QuanLyDuAn.Tests
 
             // Assert
             var redirectResult = Assert.IsType<RedirectToActionResult>(result);
-            Assert.Equal("Index", redirectResult.ActionName);
-            Assert.Equal("Workspace", redirectResult.ControllerName);
+            Assert.Equal("AccessDenied", redirectResult.ActionName);
+            Assert.Equal("Account", redirectResult.ControllerName);
+        }
+
+        [Fact]
+        public async Task AdminUsers_NonAdmin_RedirectsToAccessDenied()
+        {
+            // Arrange
+            using var context = TestHelper.GetInMemoryDbContext();
+            var controller = new ThanhVienController(context);
+            var sessionMock = TestHelper.CreateMockSession();
+            sessionMock.SetSessionString("VaiTro", "User"); // Not Admin
+            controller.ControllerContext = TestHelper.CreateControllerContext(sessionMock.Object);
+
+            // Act
+            var result = await controller.AdminUsers();
+
+            // Assert
+            var redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("AccessDenied", redirectResult.ActionName);
+            Assert.Equal("Account", redirectResult.ControllerName);
+        }
+
+        [Fact]
+        public async Task AdminDeleteUser_NonAdmin_RedirectsToAccessDenied()
+        {
+            // Arrange
+            using var context = TestHelper.GetInMemoryDbContext();
+            var controller = new ThanhVienController(context);
+            var sessionMock = TestHelper.CreateMockSession();
+            sessionMock.SetSessionString("VaiTro", "User"); // Not Admin
+            controller.ControllerContext = TestHelper.CreateControllerContext(sessionMock.Object);
+
+            // Act
+            var result = await controller.AdminDeleteUser("USER2");
+
+            // Assert
+            var redirectResult = Assert.IsType<RedirectToActionResult>(result);
+            Assert.Equal("AccessDenied", redirectResult.ActionName);
+            Assert.Equal("Account", redirectResult.ControllerName);
         }
     }
 }

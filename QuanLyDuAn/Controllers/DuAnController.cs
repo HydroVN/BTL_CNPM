@@ -103,6 +103,35 @@ namespace QuanLyDuAn.Controllers
                 return View();
             }
 
+            // Check subscription limit for Project creation
+            var workspace = await _context.Workspaces.FirstOrDefaultAsync(w => w.MaWorkspace == maWorkspace);
+            if (workspace == null)
+            {
+                ViewBag.Error = "Workspace không tồn tại.";
+                return View();
+            }
+
+            var ownerId = workspace.MaTaiKhoan;
+            var owner = await _context.Taikhoans
+                .Include(t => t.MaGoiNavigation)
+                .FirstOrDefaultAsync(t => t.MaTaiKhoan == ownerId);
+
+            int maxProjects = owner?.MaGoiNavigation?.SoDuAnToiDa ?? 5; // Default to 5 (FREE)
+
+            var ownedWorkspaceIds = await _context.Workspaces
+                .Where(w => w.MaTaiKhoan == ownerId)
+                .Select(w => w.MaWorkspace)
+                .ToListAsync();
+
+            var currentProjectCount = await _context.Duans
+                .CountAsync(d => ownedWorkspaceIds.Contains(d.MaWorkspace));
+
+            if (currentProjectCount >= maxProjects)
+            {
+                ViewBag.Error = $"Gói dịch vụ hiện tại chỉ cho phép tạo tối đa {maxProjects} dự án.";
+                return View();
+            }
+
             var duAn = new Duan
             {
                 MaDuAn = Guid.NewGuid().ToString("N")[..10].ToUpper(),

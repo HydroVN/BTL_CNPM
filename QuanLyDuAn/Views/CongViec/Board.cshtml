@@ -233,7 +233,9 @@
                     } else {
                         commentHtml = '<p class="text-muted text-center" style="font-size:.85rem;">Chưa có bình luận</p>';
                     }
-                    document.getElementById('commentList').innerHTML = commentHtml;
+                    var commentListEl = document.getElementById('commentList');
+                    commentListEl.innerHTML = commentHtml;
+                    commentListEl.scrollTop = commentListEl.scrollHeight;
 
                     new bootstrap.Modal(document.getElementById('taskDetailModal')).show();
                 });
@@ -287,16 +289,25 @@
                 body: JSON.stringify({ maCongViec: maCongViec, noiDung: noiDung })
             }).then(r => r.json()).then(data => {
                 if (data.success) {
+                    var commentListEl = document.getElementById('commentList');
+                    var firstChild = commentListEl.firstElementChild;
+                    if (firstChild && firstChild.tagName === 'P' && firstChild.classList.contains('text-muted')) {
+                        commentListEl.innerHTML = '';
+                    }
+
                     var html = '<div class="comment-item"><div class="comment-avatar">' + data.avatar + '</div>';
                     html += '<div class="comment-body"><span class="comment-author">' + data.hoTen + '</span>';
-                    html += '<span class="comment-time">Vừa xong</span>';
+                    html += '<span class="comment-time">' + (data.thoiGian || 'Vừa xong') + '</span>';
                     html += '<div class="comment-text">' + noiDung + '</div></div></div>';
-                    document.getElementById('commentList').insertAdjacentHTML('beforeend', html);
+                    commentListEl.insertAdjacentHTML('beforeend', html);
+                    
+                    commentListEl.scrollTop = commentListEl.scrollHeight;
+
                     document.getElementById('commentInput').value = '';
                     document.getElementById('btnSendComment').disabled = true;
 
                     if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                        connection.invoke('NewComment', maDuAn, maCongViec, data.hoTen, noiDung, 'Vừa xong');
+                        connection.invoke('NewComment', maDuAn, maCongViec, data.hoTen, noiDung, data.thoiGian || 'Vừa xong');
                     }
                 }
             });
@@ -306,12 +317,43 @@
         connection.on('OnNewComment', function (maCongViec, hoTen, noiDung, thoiGian) {
             var currentTaskId = document.getElementById('commentTaskId').value;
             if (currentTaskId === maCongViec) {
+                var commentListEl = document.getElementById('commentList');
+                var firstChild = commentListEl.firstElementChild;
+                if (firstChild && firstChild.tagName === 'P' && firstChild.classList.contains('text-muted')) {
+                    commentListEl.innerHTML = '';
+                }
+
                 var html = '<div class="comment-item"><div class="comment-avatar">' + hoTen[0].toUpperCase() + '</div>';
                 html += '<div class="comment-body"><span class="comment-author">' + hoTen + '</span>';
                 html += '<span class="comment-time">' + thoiGian + '</span>';
                 html += '<div class="comment-text">' + noiDung + '</div></div></div>';
-                document.getElementById('commentList').insertAdjacentHTML('beforeend', html);
+                commentListEl.insertAdjacentHTML('beforeend', html);
+                
+                commentListEl.scrollTop = commentListEl.scrollHeight;
             }
+        });
+
+        // Task deletion confirmation using SweetAlert2
+        $(document).on('click', '.btn-delete-task', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var form = $(this).closest('form');
+            var name = $(this).data('name');
+            
+            Swal.fire({
+                title: 'Xác nhận xóa công việc?',
+                text: "Bạn có chắc chắn muốn xóa công việc '" + name + "'? Hành động này không thể hoàn tác!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
         });
     </script>
 }

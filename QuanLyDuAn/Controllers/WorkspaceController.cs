@@ -45,6 +45,27 @@ namespace QuanLyDuAn.Controllers
 
             var maTk = HttpContext.Session.GetString("MaTaiKhoan")!;
 
+            // Check subscription limit for Workspace creation
+            var user = await _context.Taikhoans
+                .Include(t => t.MaGoiNavigation)
+                .FirstOrDefaultAsync(t => t.MaTaiKhoan == maTk);
+
+            string maGoi = user?.MaGoi ?? "FREE";
+            int maxWorkspaces = maGoi switch
+            {
+                "FREE" => 1,
+                "PRO" => 5,
+                "ENT" => 9999,
+                _ => 1
+            };
+
+            var currentWorkspaceCount = await _context.Workspaces.CountAsync(w => w.MaTaiKhoan == maTk);
+            if (currentWorkspaceCount >= maxWorkspaces)
+            {
+                ViewBag.Error = $"Gói dịch vụ hiện tại chỉ cho phép tạo tối đa {maxWorkspaces} Workspace.";
+                return View();
+            }
+
             var ws = new Workspace
             {
                 MaWorkspace = Guid.NewGuid().ToString("N")[..10].ToUpper(),

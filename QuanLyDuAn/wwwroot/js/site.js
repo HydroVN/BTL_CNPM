@@ -1,9 +1,15 @@
 // Sidebar toggle
 function toggleSidebar() {
-    var sidebar = document.getElementById('sidebar');
-    var overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.toggle('open');
-    overlay.classList.toggle('active');
+    if (window.innerWidth >= 992) {
+        document.body.classList.toggle('sidebar-collapsed');
+    } else {
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        if (sidebar && overlay) {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+    }
 }
 
 // Auto-dismiss alerts after 5 seconds
